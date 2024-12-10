@@ -125,6 +125,10 @@ To get started with WikiAgents, follow these steps:
 - **Redis Insight:** [http://localhost:5540](http://localhost:5540)  
 
 
+## Architecture Overview
+
+![WikiAgents Architecture](docs/images/architecture_overview.png)
+
 
 ## Acknowledgements
 
