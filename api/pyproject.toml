@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.4"
+uvicorn = "^0.32.0"
+requests = "^2.32.3"
+rq = "^2.0.0"
+beautifulsoup4 = "^4.12.3"
+bcrypt = "^4.2.1"
+sqlalchemy = "^2.0.36"
+mysql-connector-python = "^9.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

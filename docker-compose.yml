@@ -1,0 +1,106 @@
+services:
+
+  bookstack:
+    build: bookstack
+    env_file:
+      - .env
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=bookstack-db
+      - DB_PORT=3306
+    ports:
+      - 6875:80
+    restart: unless-stopped
+    volumes:
+      - bookstack-data:/config
+      - ./bookstack/init/init.sh:/custom-cont-init.d/init.sh:ro
+      - ./bookstack/init:/custom_init
+      - ./shared:/custom_init/shared
+
+  bookstack-db:
+    image: lscr.io/linuxserver/mariadb:latest
+    env_file:
+      - .env
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - bookstack-db-data:/config
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8001:80
+    environment:
+      - PMA_HOST=bookstack-db
+      - PMA_PORT=3306
+      - PMA_USER=${DB_USERNAME}
+      - PMA_PASSWORD=${DB_PASSWORD}
+
+  redis:
+    image: redis:7.4.1
+    command: "--save 60 1"
+    volumes:
+      - redis-data:/data
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    ports:
+      - 5540:5540
+    volumes:
+      - redisinsight-data:/data
+
+
+  rq-dashboard:
+    image: cjlapao/rq-dashboard:latest
+    ports:
+      - 9181:9181
+    command: "--bind 0.0.0.0 --port 9181 --redis-url redis://redis:6379"
+
+  api:
+    build: api
+    env_file:
+      - .env
+    volumes:
+      - ./api/api:/wikiagents/api
+      - ./shared:/wikiagents/shared
+
+  agents:
+    build: agents
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DOCKER_HOST=unix:///run/podman/podman.sock
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - OPENAI_API_BASE=https://api.lambdalabs.com/v1
+      # - OPENAI_API_BASE=http://host.docker.internal:8000/v1
+
+    volumes:
+      - ./shared:/wikiagents/shared
+      - ./agents/agents:/wikiagents/agents
+      - ./agents/tools:/wikiagents/tools
+      - ./agents/outputs:/workspace
+      - /run/user/1000/podman/podman.sock:/run/podman/podman.sock
+    command: ["bash", "start.sh"]
+    deploy:
+      replicas: ${CONCURRENT_AGENTS}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+
+volumes:
+  bookstack-db-data: {}
+  redis-data: {}
+  bookstack-data: {}
+  redisinsight-data: {}

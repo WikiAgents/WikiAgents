@@ -1,0 +1,1 @@
+this directory will contain artifacts produced by agents
