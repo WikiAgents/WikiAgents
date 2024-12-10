@@ -84,12 +84,6 @@ class BiasScannerNode(Node):
 
 class BiasScanner(WikiAgentBase):
     @staticmethod
-    def generate_content(
-        agent_context: RedisAgent | dict, wiki_context: WikiContextInfo | dict, prd
-    ) -> str:
-        pass
-
-    @staticmethod
     def react_to_comment(
         agent_context: RedisAgent | dict,
         wiki_context: WikiContextInfo | dict,

@@ -56,7 +56,7 @@ PROJECT_REQUIREMENTS_STEP_3 = """### Step 3/4
 
 PROJECT_REQUIREMENTS_STEP_3_COMMENT = "🚀 You have completed the Output Structure Suggestion step. Please review and edit the structure to fit your needs, and choose between a simple or a detailed structure. You can proceed to the next step by commenting <strong>/next simple</strong> for a simple structure or <strong>/next detailed</strong> for a detailed structure."
 
-PROJECT_REQUIREMENTS_STEP_4 = """
+PROJECT_REQUIREMENTS_STEP_4 = """### Step 4/4
 #### Chosen Agents
 {selected_agents}
 

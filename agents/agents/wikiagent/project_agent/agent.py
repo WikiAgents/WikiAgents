@@ -16,6 +16,7 @@ from agents.wikiagent.project_agent.steps import (
     agent_selection_steps,
     output_structure_suggestion_steps,
     project_requirements_refinement_steps,
+    agent_selection_plan_steps,
 )
 from agents.wikiagent.project_agent.tape import WikiAgentsTape
 from pydantic import Field
@@ -115,7 +116,7 @@ class ProjectRequirementsWizard:
 
     def run_next_step(self):
         current_step = self.page_content.split("\n", 1)[0].strip()
-        self.next_steps[current_step]()
+        return self.next_steps[current_step]()
 
     def refine_project_requirements(self):
         project_description = extract_section_content(
@@ -199,6 +200,7 @@ class ProjectRequirementsWizard:
         structure_type = self.comment.split(" ", 1)[-1].strip()
         if structure_type not in ["simple", "detailed"]:
             return "💥 Invalid command! Try <b>/next simple</b> or <b>/next detailed</b>"
+        # TODO remove other structure from tape?
         tape = tape.append(
             UserStep(content=f"The user has selected the {structure_type} structure.")
         )
@@ -207,11 +209,19 @@ class ProjectRequirementsWizard:
             llm,
             nodes=[
                 ProjectPlannerNode(
+                    name="agents_selector_plan",
+                    system_prompt=PromptRegistry.select_agents,
+                    guidance="Follow the plan.",
+                    allowed_steps=agent_selection_plan_steps,
+                    next_node="agents_selector",
+                ),
+                ProjectPlannerNode(
                     name="agents_selector",
+                    system_prompt=PromptRegistry.select_agents,
                     guidance=PromptRegistry.select_agents,
                     allowed_steps=agent_selection_steps,
                     next_node="agents_selector",
-                )
+                ),
             ],
         )
         for event in main_loop(agent, tape, self.env):
@@ -232,205 +242,16 @@ class ProjectRequirementsWizard:
         return PROJECT_REQUIREMENTS_STEP_4_COMMENT
 
 
-def next_project_requirements_step(wiki_context: WikiContextInfo, comment: str):
-    client = AgentBookStackClient("WikiAgent")
-    page = client.get_page(wiki_context.page_id)
-    page_content = page["markdown"]
-    req_step = page_content.split("\n", 1)[0]
-    env = WikiAgentsEnvironment("WikiAgent")
-
-    if req_step == "### Step 1/4":
-        project_description = extract_section_content(
-            page_content, "#### Project Description"
-        )
-        tape = WikiAgentsTape(
-            steps=[
-                ProjectMetadata(
-                    name=wiki_context.project_name,
-                    project_id=wiki_context.project_id,
-                    initial_project_description=project_description,
-                )
-            ]
-        )
-        agent = Agent.create(
-            llm,
-            nodes=[
-                ProjectPlannerNode(
-                    name="requirements_refinement",
-                    guidance=PromptRegistry.project_requirements_refinement,
-                    allowed_steps=project_requirements_refinement_steps,
-                    next_node="requirements_refinement",
-                )
-            ],
-        )
-        for event in main_loop(agent, tape, env):
-            if ae := event.agent_event:
-                if isinstance(ae.step, RefineProjectRequirementsThought):
-                    tape = ae.partial_tape
-                    break
-        assert isinstance(tape[-1], RefineProjectRequirementsThought)
-        key_components = "\n".join(f"- {item}" for item in tape[-1].key_components)
-        new_content = PROJECT_REQUIREMENTS_STEP_2.format(
-            project_description=tape[-1].refined_description,
-            key_components=key_components,
-        )
-        client.update_page(page_id=page["id"], markdown=new_content)
-
-        save_project_requirements_tape(wiki_context=wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_2_COMMENT
-
-    elif req_step == "### Step 2/4":
-        tape = get_project_requirements_tape(wiki_context=wiki_context)
-        if tape is None:
-            return "💥 Tape not found!"
-        tape = tape.append(SetNextNode(next_node="output_structure_planner"))
-        agent = Agent.create(
-            llm,
-            nodes=[
-                ProjectPlannerNode(
-                    name="output_structure_planner",
-                    guidance=PromptRegistry.output_structure_suggestion,
-                    allowed_steps=output_structure_suggestion_steps,
-                    next_node="output_structure_planner",
-                )
-            ],
-        )
-        for event in main_loop(agent, tape, env):
-            if ae := event.agent_event:
-                if isinstance(ae.step, OutputStructureSuggestionThought):
-                    tape = ae.partial_tape
-                    break
-        assert isinstance(tape[-1], OutputStructureSuggestionThought)
-        simple_structure = (
-            f"```json\n{json.dumps(tape[-1].simple_structure, indent=2)}\n```"
-        )
-        detailed_structure = (
-            f"```json\n{json.dumps(tape[-1].detailed_structure, indent=2)}\n```"
-        )
-        new_content = PROJECT_REQUIREMENTS_STEP_3.format(
-            simple_structure=simple_structure, detailed_structure=detailed_structure
-        )
-        client.update_page(page_id=page["id"], markdown=new_content)
-        save_project_requirements_tape(wiki_context=wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_3_COMMENT
-
-    elif req_step == "### Step 3/4":
-        tape = get_project_requirements_tape(wiki_context=wiki_context)
-        if tape is None:
-            return "💥 Tape not found!"
-        structure_type = comment.split(" ", 1)[-1].strip()
-        if structure_type not in ["simple", "detailed"]:
-            return "💥 Invalid command! Try <b>/next simple</b> or <b>/next detailed</b>"
-        tape = tape.append(
-            UserStep(content=f"The user has selected the {structure_type} structure.")
-        )
-        tape = tape.append(SetNextNode(next_node="agents_selector"))
-        agent = Agent.create(
-            llm,
-            nodes=[
-                ProjectPlannerNode(
-                    name="agents_selector",
-                    guidance=PromptRegistry.select_agents,
-                    allowed_steps=agent_selection_steps,
-                    next_node="agents_selector",
-                )
-            ],
-        )
-        for event in main_loop(agent, tape, env):
-            if ae := event.agent_event:
-                if isinstance(ae.step, AgentSelectionThought):
-                    tape = ae.partial_tape
-                    break
-        assert isinstance(tape[-1], AgentSelectionThought)
-        selected_agents = (
-            f"```json\n{json.dumps(tape[-1].selected_agents, indent=2)}\n```"
-        )
-        missing_roles = f"```json\n{json.dumps(tape[-1].missing_roles, indent=2)}\n```"
-        new_content = PROJECT_REQUIREMENTS_STEP_4.format(
-            selected_agents=selected_agents, missing_roles=missing_roles
-        )
-        client.update_page(page_id=page["id"], markdown=new_content)
-        save_project_requirements_tape(wiki_context=wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_4_COMMENT
-
-
 def react_to_comment(wiki_context: WikiContextInfo, comment: str):
     comment_response = None
     if comment.startswith("/next"):
-        comment_response = next_project_requirements_step(wiki_context, comment)
+        comment_response = ProjectRequirementsWizard(
+            wiki_context, comment
+        ).run_next_step()
+
     if comment_response and len(comment_response) > 0:
         AgentBookStackClient("WikiAgent").create_comment(
             comment_response,
             page_id=wiki_context.page_id,
             parent_id=wiki_context.local_comment_id,
         )
-
-    #     tape = get_project_requirements_tape(wiki_context)
-    #     if tape is None:
-    #         tape = WikiAgentsTape()
-
-    # # TODO improve later
-    # req_step = page["markdown"].split("\n", 1)[0]
-    # if req_step == "### Step 1/3":
-    #     pass
-    # elif req_step == "### Step 2/3":
-    #     pass
-    # elif req_step == "### Step 3/3":
-    #     pass
-
-
-# wiki_context = WikiContextInfo(
-#     type='comment_created',
-#     user_id=1,
-#     project_id=2,
-#     project_name='Rocket Science',
-#     book_id=5,
-#     chapter_id=None,
-#     page_id=16,
-#     page_name='📋 Project Requirements',
-#     project_context=ProjectContextInfo(project_id=2, metadata_book_id=5, creative_agents_chapter_id=8, integrity_agents_chapter_id=9, involved_agents_chapter_id=7, tapes_chapter_id=10)
-
-# )
-
-# tape = get_project_requirements_tape(wiki_context=wiki_context)
-# tape = tape.append(SetNextNode(next_node="output_structure_planner"))
-
-
-# import os
-# os.environ["LITELLM_LOG"] = "DEBUG"
-# import logging
-
-
-# # logger = logging.getLogger(__name__)
-# # logger.setLevel(logging.DEBUG)
-
-
-# from agents.wikiagent.project_agent.steps import RefineProjectRequirementsThought, AgentSelectionThought, ProjectMetadata
-# from agents.wikiagent.project_agent.environment import WikiAgentsEnvironment
-# llm = LiteLLM(
-#     # base_url="http://host.docker.internal:8000/v1",
-#     # model_name="openai/Hermes-3-Llama-3.1-8B-Q6_K_L.gguf"
-#     model_name="gpt-4o-mini-2024-07-18"
-# )
-
-# tape = WikiAgentsTape(steps=[ProjectMetadata(name="Rocket Science", project_id=2), UserStep(content="rocket science")])
-# agent = ProjectPlannerAgent.create(llm)
-# env = WikiAgentsEnvironment("WikiAgent")
-# for event in main_loop(agent, tape, env):
-#     if ae := event.agent_event:
-#         if isinstance(ae.step, AgentSelectionThought):
-#             final_tape = ae.partial_tape
-#             break
-#         if ae.step:
-#             pass
-#         if ae.final_tape:
-#             final_tape = ae.final_tape
-
-
-# wiki_context = WikiContextInfo(
-#     type="project_created",
-#     project_id=3
-# )
-# context = {"wiki_context": wiki_context.model_dump(exclude_none=True)}
-# description = "rocket science"
-# tape = DialogTape(steps=[AssistantThought(content=json.dumps(context)), UserStep(content=description)])

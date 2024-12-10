@@ -216,49 +216,6 @@ def create_page(
     return page
 
 
-def create_tinytroupe_page(
-    book_id: int,
-    chapter_id: int,
-    name: str,
-    slug: str,
-    is_template: bool,
-    description: str,
-    tinytroupe_dump: dict,
-):
-    html = f"""<p>{description}</p><pre id="bkmrk-%7B-%22json_serializable"><code class="language-json">{json.dumps(tinytroupe_dump, indent=2)}</code></pre>"""
-    page = Page(
-        book_id=book_id,
-        chapter_id=chapter_id,
-        name=name,
-        slug=slug,
-        priority=2,
-        created_by=3,
-        updated_by=3,
-        revision_count=1,
-        template=1 if is_template else 0,
-        owned_by=3,
-        editor="wysiwyg",
-        # markdown=description,
-        html=html,
-        text=md2text(description),
-    )
-    session.add(page)
-    session.commit()
-    session.refresh(page)
-    for role_id in [1, 2, 3, 4]:
-        session.add(
-            JointPermission(
-                role_id=role_id,
-                entity_type="page",
-                entity_id=page.id,
-                status=1 if role_id > 1 else 3,
-                owner_id=3,
-            )
-        )
-    session.commit()
-    return page
-
-
 def create_chapter(book_id: int, name: str, slug: str, description: str):
     chapter = Chapter(
         book_id=book_id,
@@ -494,7 +451,7 @@ with SessionLocal() as session:
                     page = create_page(
                         book.id, 0, agent_name, agent_slug, False, agent["markdown"]
                     )
-                    code_path, command, parameters = parse_agent_markdown(
+                    description, code_path, command, parameters = parse_agent_markdown(
                         agent["markdown"]
                     )
                     # tools = markdown_list_to_list(extract_code(extract_section_content(agent["markdown"], "##### Tools"))) #TODO
@@ -502,6 +459,7 @@ with SessionLocal() as session:
                     AgentOnboarding().onboard_agent(
                         RedisAgent(
                             name=agent_name,
+                            description=description,
                             type="content_agent",
                             page_id=page.id,
                             code_path=code_path,
@@ -522,9 +480,12 @@ with SessionLocal() as session:
                     )
                     for agent_name, agent in g["agents"].items():
                         agent_slug = agent_name.lower().replace(" ", "-")
-                        code_path, command, parameters = parse_agent_markdown(
-                            agent["markdown"]
-                        )
+                        (
+                            description,
+                            code_path,
+                            command,
+                            parameters,
+                        ) = parse_agent_markdown(agent["markdown"])
                         page = create_page(
                             book.id,
                             chapter.id,
@@ -536,6 +497,7 @@ with SessionLocal() as session:
                         AgentOnboarding().onboard_agent(
                             RedisAgent(
                                 name=agent_name,
+                                description=description,
                                 type="integrity_agent",
                                 page_id=page.id,
                                 code_path=code_path,

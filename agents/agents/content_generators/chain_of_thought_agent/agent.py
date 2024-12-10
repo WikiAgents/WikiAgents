@@ -63,3 +63,8 @@ class ActNode(Node):
             yield SetNextNode(next_node="act")
         else:
             raise ValueError()
+
+
+from tapeagents.nodes import MonoNode
+from typing import Any
+from pydantic import Field

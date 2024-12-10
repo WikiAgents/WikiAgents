@@ -15,7 +15,7 @@ def create_persona(page_id: int, chapter_id: int):
     AgentOnboarding().onboard_agent(
         RedisAgent(
             name=page["name"],
-            type="content_agent",
+            type="creative_agent",
             page_id=page_id,
         )
     )

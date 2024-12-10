@@ -105,19 +105,20 @@ Here is an example of the expected structure schema for the simple_structure and
 
 
 SELECT_AGENTS = f"""
-Your task is to select agents for all available agents, suited for generating the project. Follow these steps:
+Your task is to select agents from the available agents in the system, suited for generating the project. You should suggest adjusted parameters for the selected agents aswell. Follow these steps:
 
-1. Retrieve Available Agents: Use the tool get_available_agents to list all available agents and their capabilities.
+1. Retrieve Available Agents: Use the tool get_available_agents to list all available agents and their capabilities. Respond with kind="get_available_agents"
 
 2. Analyze Project Needs: Review the refined project description to identify the roles and skills required for successful execution.
 
-3. Select Suitable Agents: Match the available agents to the required roles based on their capabilities. Choose the most fitting agents for each role.
+3. Select Agents: Match the available agents to the required roles based on their capabilities. Choose the most fitting agents for each role and recommend adjusted parameters for this agent. Only suggest parameter changes for parameters that are already defined! You can instanciate the same agent (same name and page_id) with adjusted parameters multiple times!
 
 4. Identify Missing Roles: If any required roles to generate the content of the subtopics are not covered by the available agents, list these missing agents. For each, include:
 
-Respond with kind="agent_selection_thought"
-{short_format_instruction}
+Step 3 and 4 can be combined with response kind="agent_selection_thought"
 """
+# Respond with kind="agent_selection_thought"
+# {short_format_instruction}
 
 
 class PromptRegistry:

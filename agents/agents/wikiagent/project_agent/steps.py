@@ -374,11 +374,11 @@ class AvailableAgentsObservation(WikiAgentsObservation):
 class AgentSelectionThought(WikiAgentsThought):
     kind: Literal["agent_selection_thought"] = "agent_selection_thought"
     selected_agents: List[dict] = Field(
-        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'page_id': <agent_page_id>}]"
+        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'page_id': <agent_page_id>, 'parameters': <agent_parameters_adjusted_to_project>}]"
     )
     missing_roles: List[dict] = Field(
         default=[],
-        description="The list of agents that could be useful for the project. Must be in the form of: [{'role': <agent_role>, 'why': <arguments_for_the_agent>}]",
+        description="The list of agents that could be beneficial for generating this project. Must be in the form of: [{'description': <agent_description>, 'why': <arguments_why_the_agent_is_needed>}]",
     )
 
 
@@ -512,12 +512,17 @@ output_structure_suggestion_steps = get_step_schemas_from_union_type(
 #     Annotated[Union[AgentSelectionThought], Field(discriminator="kind")]
 # )
 
+agent_selection_plan_steps = get_step_schemas_from_union_type(
+    Annotated[
+        Union[GetAvailableAgentsAction, AvailableAgentsObservation],
+        Field(discriminator="kind"),
+    ]
+)
+
 
 agent_selection_steps = get_step_schemas_from_union_type(
     Annotated[
-        Union[
-            GetAvailableAgentsAction, AvailableAgentsObservation, AgentSelectionThought
-        ],
+        Union[AgentSelectionThought],
         Field(discriminator="kind"),
     ]
 )

@@ -12,12 +12,13 @@ class WikiAgentBase:
     """
 
     @staticmethod
-    def generate_content(
-        agent_context: RedisAgent | dict, wiki_context: WikiContextInfo | dict, prd
+    def generate(
+        agent_context: RedisAgent | dict,
+        wiki_context: WikiContextInfo | dict,
+        instructions: List[str],
     ) -> str:
         """
-        Generates content based on the provided wiki context, project requirements document (PRD),
-        and user-defined parameters.
+        Generates content based on the provided wiki context, agent context and instructions.
 
         Args:
             agent_context (RedisAgent): Information about the agent.

@@ -147,6 +147,7 @@ def markdown_list_to_list(markdown: str):
 
 
 def parse_agent_markdown(markdown: str):
+    description = extract_section_content(markdown, "##### Description")
     code_path = extract_code(extract_section_content(markdown, "##### Code Path"))
     if code_path:
         code_path = json.loads(code_path)
@@ -156,7 +157,7 @@ def parse_agent_markdown(markdown: str):
     parameters = extract_code(extract_section_content(markdown, "##### Parameters"))
     if parameters:
         parameters = json.loads(parameters)
-    return code_path, command, parameters
+    return description, code_path, command, parameters
 
 
 def get_agent_vars_from_redis(

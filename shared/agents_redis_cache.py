@@ -35,7 +35,10 @@ class AgentsRedisCache:
 
     def get_agent(self, name: str):
         agent = RedisAgent(**self.redis.hgetall(f"agent:{name}"))
-        agent.parameters = self.redis.hgetall(f"agent:{name}:parameters")
+        agent.parameters = {
+            k: json.loads(v)
+            for k, v in self.redis.hgetall(f"agent:{name}:parameters").items()
+        }
         agent.tools = {
             k: json.loads(v)
             for k, v in self.redis.hgetall(f"agent:{name}:tools").items()
