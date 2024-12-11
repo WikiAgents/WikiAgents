@@ -2,7 +2,7 @@ import json
 import uuid
 from typing import List
 
-from agents.steps import CommentResponse
+from agents.base.steps import CommentResponse
 from tapeagents.agent import Agent, Node
 from tapeagents.core import Observation, Prompt, SetNextNode, Step, StopStep, Tape
 from tapeagents.dialog_tape import (

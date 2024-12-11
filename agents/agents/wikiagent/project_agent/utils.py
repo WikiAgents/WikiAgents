@@ -1,7 +1,7 @@
 import base64
 import json
 
-from agents.wikiagent.project_agent.tape import WikiAgentsTape
+from agents.wikiagent.project_agent.tape import ProjectPlannerTape
 from tapeagents.observe import retrieve_tape_llm_calls
 from tapeagents.rendering import PrettyRenderer
 
@@ -25,14 +25,16 @@ def get_project_requirements_tape(wiki_context: WikiContextInfo):
                 ):
                     full_attachment = client.get_attachment(attachment["id"])
                     tape_json = json.loads(base64.b64decode(full_attachment["content"]))
-                    tape = WikiAgentsTape.model_validate(tape_json)
+                    tape = ProjectPlannerTape.model_validate(tape_json)
                     break
         if tape is not None:
             break
     return tape
 
 
-def save_project_requirements_tape(wiki_context: WikiContextInfo, tape: WikiAgentsTape):
+def save_project_requirements_tape(
+    wiki_context: WikiContextInfo, tape: ProjectPlannerTape
+):
     tmp_filename = f"/tmp/project_{wiki_context.project_id}_requirements_tape.json"
     with open(tmp_filename, "w") as f:
         json.dump(tape.model_dump(), f, indent=2)

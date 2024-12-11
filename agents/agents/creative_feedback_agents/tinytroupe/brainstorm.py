@@ -3,8 +3,8 @@ import re
 from typing import List, Optional
 
 import tinytroupe
-from agents.base import WikiAgentBase
-from agents.steps import CommentResponse
+from agents.base.agent import WikiAgentBase
+from agents.base.steps import CommentResponse
 from bs4 import BeautifulSoup
 from tinytroupe.agent import TinyPerson
 from tinytroupe.control import transactional

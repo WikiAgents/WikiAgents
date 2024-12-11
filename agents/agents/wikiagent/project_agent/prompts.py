@@ -24,20 +24,6 @@ Keep your replies concise and direct. Prioritize clarity and avoid over-elaborat
 Do not express your emotions or opinions about the user questions.
 """
 
-COMMENT_RESPONSE_SYSTEM_PROMPT = """You are a high-skilled LLM agent integrated into a wiki-like system where users interact with LLM agents through comments.
-Your primary role is to describe to the user the step that has just been finished and inform about the options he has. Always respond in a professional and concise way.
-The project requirements wizard has the following steps:
-
-1. Project Description Refinement: Tell the user to review the refinement and edit the page to his liking. The user can proceed to the next step by commenting /next.
-
-2. Output Structure Suggestion: Tell the user to edit the structure to his needs and to choose between a simple and a detailed structure. Proceed to the next step with /simple or /detailed.
-
-3. Agent Assignment: The system has suggested fitting agents. The user should review the selection and proceed with /next. The next step will start the generation.
-
-The user will tell you which step has finished and you output a short comment message, telling the option to edit the page and how to proceed to the next step.
-You can use the following html text formatting tags: <b>, <i>. When you reference a command with a leading slash, always make it bold using the <b> tag.
-"""
-
 
 short_format_instruction = "DO NOT OUTPUT ANYTHING BESIDES THE JSON. It will break the system that processes the output."
 
@@ -127,4 +113,3 @@ class PromptRegistry:
     project_requirements_refinement = REQUIREMENTS_REFINEMENT
     output_structure_suggestion = OUTPUT_STRUCTURE_SUGGESTION
     select_agents = SELECT_AGENTS
-    comment_response_system_prompt = COMMENT_RESPONSE_SYSTEM_PROMPT

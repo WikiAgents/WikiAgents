@@ -1,10 +1,10 @@
 import json
 from typing import List, Literal, Optional
 
-from agents.base import WikiAgentBase
+from agents.base.agent import WikiAgentBase
 from agents.content_integrity.bias.bias_scanner.prompts import PromptRegistry
 from agents.content_integrity.bias.bias_scanner.result_rendering import render_result
-from agents.steps import CommentResponse
+from agents.base.steps import CommentResponse
 from tapeagents.agent import Agent, Node
 from tapeagents.core import Action, Prompt, SetNextNode, Tape, Thought
 from tapeagents.dialog_tape import (

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from agents.base import WikiAgentBase
+from agents.agents.base_agent import WikiAgentBase
 from agents.steps import CommentResponse
 from docling.document_converter import DocumentConverter
 

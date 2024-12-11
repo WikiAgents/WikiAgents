@@ -1,6 +1,6 @@
 from typing import List
 
-from agents.steps import CommentResponse
+from agents.base.steps import CommentResponse
 
 from shared.models import RedisAgent, WikiContextInfo
 
@@ -15,7 +15,7 @@ class WikiAgentBase:
     def generate(
         agent_context: RedisAgent | dict,
         wiki_context: WikiContextInfo | dict,
-        instructions: List[str],
+        instructions: str,
     ) -> str:
         """
         Generates content based on the provided wiki context, agent context and instructions.
@@ -23,7 +23,7 @@ class WikiAgentBase:
         Args:
             agent_context (RedisAgent): Information about the agent.
             wiki_context (WikiContextInfo): Information about the origin of the event triggering this function.
-            prd: The project requirements document, specifying project needs and objectives.
+            instructions (str): The instructions for the generation.
 
         Returns:
             str: The generated content as a string.

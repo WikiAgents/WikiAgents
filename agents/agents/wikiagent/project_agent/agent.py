@@ -2,10 +2,9 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 import json
-import uuid
 from typing import Any
 
-from agents.wikiagent.project_agent.environment import WikiAgentsEnvironment
+from agents.wikiagent.project_agent.environment import ProjectPlannerEnvironment
 from agents.wikiagent.project_agent.prompts import PromptRegistry
 from agents.wikiagent.project_agent.steps import (
     AgentSelectionThought,
@@ -17,8 +16,9 @@ from agents.wikiagent.project_agent.steps import (
     output_structure_suggestion_steps,
     project_requirements_refinement_steps,
     agent_selection_plan_steps,
+    ProjectPlannerAgentTapeStep,
 )
-from agents.wikiagent.project_agent.tape import WikiAgentsTape
+from agents.wikiagent.project_agent.tape import ProjectPlannerTape
 from pydantic import Field
 from tapeagents.agent import Agent, Node
 from tapeagents.core import Observation, Prompt, SetNextNode, Step, StopStep, Tape
@@ -46,50 +46,8 @@ from tools.wikiagents.generic_rq_tool_wrapper import call_rq_function
 from shared.bookstack_client import AgentBookStackClient
 from shared.constants import *
 
-# from agents.wikiagent.tools.bookstack import get_book, get_page, client
-# from agents.wikiagent.tools.creative_feedback import creative_feedback
-# from agents.wikiagent.tools.fact_checker import fact_checker
-# from agents.wikiagent.tools.bias_checker import check_bias
 from shared.models import ProjectContextInfo, WikiContextInfo
-
-llm = LiteLLM(
-    # base_url="http://host.docker.internal:8000/v1",
-    # model_name="openai/Hermes-3-Llama-3.1-8B-Q6_K_L.gguf"
-    model_name="gpt-4o-mini-2024-07-18"
-)
-
-
-class ProjectPlannerNode(MonoNode):
-    system_prompt: str = PromptRegistry.system_prompt
-    steps_prompt: str = PromptRegistry.allowed_steps
-    allowed_steps: str
-    agent_step_cls: Any = Field(exclude=True, default=ProjectPlannerAgentStep)
-
-    def get_steps_description(self, tape: WikiAgentsTape, agent: Any) -> str:
-        """
-        Allow different subset of steps based on the agent's configuration
-        """
-        return self.steps_prompt.format(allowed_steps=self.allowed_steps)
-
-
-class ProjectPlannerAgent(Agent):
-    @classmethod
-    def create(cls, llm: LLM, **kwargs):
-        nodes = [
-            ProjectPlannerNode(
-                name="requirements_refinement",
-                guidance=PromptRegistry.project_requirements_refinement,
-                allowed_steps=project_requirements_refinement_steps,
-            ),
-            ProjectPlannerNode(
-                name="select_agents",
-                guidance=PromptRegistry.select_agents,
-                allowed_steps=agent_selection_steps,
-                next_node="select_agents",
-            ),
-        ]
-        return super().create(llm, nodes=nodes, max_iterations=2, **kwargs)
-
+from agents.base.nodes import WikiAgentsMonoNode
 
 from agents.wikiagent.project_agent.utils import (
     get_project_requirements_tape,
@@ -99,6 +57,20 @@ from agents.wikiagent.project_agent.utils import (
 from shared.utils import extract_section_content
 
 
+llm = LiteLLM(
+    # base_url="http://host.docker.internal:8000/v1",
+    # model_name="openai/Hermes-3-Llama-3.1-8B-Q6_K_L.gguf"
+    model_name="gpt-4o-mini-2024-07-18"
+)
+
+
+class ProjectPlannerNode(WikiAgentsMonoNode[ProjectPlannerTape]):
+    system_prompt: str = PromptRegistry.system_prompt
+    steps_prompt: str = PromptRegistry.allowed_steps
+    allowed_steps: str
+    agent_step_cls: Any = Field(exclude=True, default=ProjectPlannerAgentStep)
+
+
 class ProjectRequirementsWizard:
     def __init__(self, wiki_context: WikiContextInfo, comment: str):
         self.wiki_context = wiki_context
@@ -106,7 +78,7 @@ class ProjectRequirementsWizard:
         self.client = AgentBookStackClient("WikiAgent")
         self.page = self.client.get_page(wiki_context.page_id)
         self.page_content = self.page["markdown"]
-        self.env = WikiAgentsEnvironment("WikiAgent")
+        self.env = ProjectPlannerEnvironment("WikiAgent")
         self.next_steps: dict = {
             "### Step 1/4": self.refine_project_requirements,
             "### Step 2/4": self.suggest_output_structure,
@@ -122,7 +94,7 @@ class ProjectRequirementsWizard:
         project_description = extract_section_content(
             self.page_content, "#### Project Description"
         )
-        tape = WikiAgentsTape(
+        tape = ProjectPlannerTape(
             steps=[
                 ProjectMetadata(
                     name=self.wiki_context.project_name,

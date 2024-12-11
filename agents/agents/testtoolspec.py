@@ -1,91 +1,108 @@
-def extract_function_spec_and_call(function_code, function_name, *args, **kwargs):
-    """
-    Evaluates a function from a code string, generates its specification,
-    and calls the function with provided arguments.
-
-    Args:
-        function_code (str): The entire code of the function as a string.
-        function_name (str): The name of the function to extract and call.
-        *args: Positional arguments to pass to the function.
-        **kwargs: Keyword arguments to pass to the function.
-
-    Returns:
-        tuple: The specification string and the function's return value.
-    """
-    # Step 1: Define the function in the current namespace
-    local_namespace = {}
-    exec(function_code, {}, local_namespace)
-
-    # Step 2: Get the function object
-    if function_name not in local_namespace:
-        raise ValueError(f"Function '{function_name}' not found in the provided code.")
-    func = local_namespace[function_name]
-
-    # Step 3: Generate the function specification
-    spec = generate_function_spec(func)
-
-    # Step 4: Call the function
-    result = func(*args, **kwargs)
-
-    return spec, result
+import ast
+import json
+from shared.bookstack_client import AgentBookStackClient
 
 
-# Function specification generator (same as before)
-def generate_function_spec(func):
-    """
-    Generates a function specification string based on the function's docstring.
+class UserdefinedTool:
+    def __init__(self, tool_code: str):
+        self.function_name = self.extract_function_name(tool_code)
+        self.function, self.spec_dict, self.spec_str = self.extract_spec(tool_code)
 
-    Args:
-        func (callable): The function for which the specification is to be generated.
+    def extract_function_name(self, tool_code: str):
+        """
+        Extracts the name of the first function in the given code string.
 
-    Returns:
-        str: The formatted function specification string.
-    """
-    if not func.__doc__:
-        raise ValueError("The provided function does not have a docstring.")
+        Args:
+            tool_code (str): The entire code of the function as a string.
 
-    docstring = func.__doc__.strip()
-    spec = f"""
-    {{
-        "name": "{func.__name__}",
-        "description": "{docstring}",
-        "parameters": {{
-            "type": "object",
-            "properties": {{
-    """
+        Returns:
+            str: The name of the first function found in the code.
+        """
+        tree = ast.parse(tool_code)
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                return node.name
+        raise ValueError("No function definition found in the provided code.")
 
-    lines = docstring.split("\n")
-    args_section = False
-    for line in lines:
-        line = line.strip()
-        if line.lower().startswith("args:"):
-            args_section = True
-        elif line.lower().startswith(("returns:", "raises:")):
-            args_section = False
-        elif args_section and ":" in line:
-            arg_name, arg_desc = line.split(":", 1)
-            arg_name = arg_name.strip()
-            arg_desc = arg_desc.strip()
-            spec += f"""
-                "{arg_name}": {{
-                    "type": "string", 
-                    "description": "{arg_desc}"
-                }},
-            """
+    def extract_spec(self, tool_code: str):
+        local_namespace = {}
+        exec(tool_code, {}, local_namespace)
+        if self.function_name not in local_namespace:
+            raise ValueError(
+                f"Function '{self.function_name}' not found in the provided code."
+            )
+        func = local_namespace[self.function_name]
+        return self.generate_function_spec(func)
 
-    spec = spec.rstrip(",\n") + "\n"
-    spec += """
-            },
-            "required": []
+    def generate_function_spec(self, func):
+        """
+        Generates a function specification as a dictionary and string based on the function's docstring.
+
+        Args:
+            func (callable): The function for which the specification is to be generated.
+
+        Returns:
+            tuple: A dictionary and string representation of the function specification.
+        """
+        if not func.__doc__:
+            raise ValueError("The provided function does not have a docstring.")
+
+        docstring = func.__doc__.strip()
+        description_lines = []
+        for line in docstring.split("\n"):
+            stripped_line = line.strip()
+            if stripped_line.lower().startswith(("args:", "returns:", "raises:")):
+                break
+            description_lines.append(stripped_line)
+        description = " ".join(description_lines).strip()
+
+        spec_dict = {
+            "name": func.__name__,
+            "description": description,
+            "parameters": {},
         }
-    }
-    """
+        lines = docstring.split("\n")
+        args_section = False
+        for line in lines:
+            line = line.strip()
+            if line.lower().startswith("args:"):
+                args_section = True
+            elif line.lower().startswith(("returns:", "raises:")):
+                args_section = False
+            elif args_section and ":" in line:
+                arg_name, arg_desc = line.split(":", 1)
+                arg_name = arg_name.strip()
+                arg_desc = arg_desc.strip()
+                arg_type = "string"
+                if "(" in arg_name and ")" in arg_name:
+                    arg_name, annotation = arg_name.split("(")
+                    arg_name = arg_name.strip()
+                    annotation = annotation.strip(")")
+                    arg_type = annotation
+                spec_dict["parameters"][arg_name] = {
+                    "type": arg_type,
+                    "description": arg_desc,
+                }
+        spec_str = json.dumps(spec_dict, indent=4)
+        return func, spec_dict, spec_str
 
-    return spec
+    def run(self, *args, **kwargs):
+        """
+        Executes the function stored in the class with the given arguments.
+
+        Args:
+            *args: Positional arguments for the function.
+            **kwargs: Keyword arguments for the function.
+
+        Returns:
+            Any: The result of the function execution.
+        """
+        return self.function(*args, **kwargs)
 
 
 # Example function code as a string
 function_code = """
+    
 def example_function(name, age):
     \"""
     Example function that greets a user.
@@ -98,14 +115,20 @@ def example_function(name, age):
         str: A greeting message.
     \"""
     return f"Hello {name}, you are {age} years old!"
+
+    
 """
 
-# Evaluate and call the function
-spec, result = extract_function_spec_and_call(
-    function_code, "example_function", "Alice", 30
-)
 
-print("Function Specification:")
-print(spec)
-print("\nFunction Result:")
-print(result)
+t = UserdefinedTool(function_code)
+
+t.run(name="Alice", age=30)
+
+
+# # Evaluate and call the function
+# spec_dict, spec_str, result = extract_function_spec_and_call(function_code, "Alice", 30)
+
+# print("Function Specification:")
+# print(spec_str)
+# print("\nFunction Result:")
+# print(result)
