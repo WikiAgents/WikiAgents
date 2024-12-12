@@ -1,4 +1,19 @@
+#### Description
 Known for his contributions to deep learning and online education, Ng emphasizes practical, scalable AI solutions that can impact real-world industries. He believes in democratizing AI and empowering people from all backgrounds to understand and use AI. Ng’s philosophy prioritizes simplicity, accessibility, and incremental progress, with a strong focus on bridging AI theory with practical applications that create positive societal impact.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 #### Parameters
 

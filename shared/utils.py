@@ -69,23 +69,6 @@ def get_project_metadata_for_page(page_id: int):
     return metadata if metadata["metadata_book"] else None
 
 
-# def extract_section_content(markdown: str, heading: str) -> dict:
-#     """
-#     Extracts the content between a given heading and the next "---" separator in the markdown.
-
-#     Args:
-#         markdown (str): The markdown string.
-#         heading (str): The heading to search for.
-
-#     Returns:
-#         dict: A dictionary with the heading content.
-#     """
-#     pattern = rf"{heading}\n(.*?)(?=\n---)"
-#     matches = re.findall(pattern, markdown, re.DOTALL)
-#     if matches:
-#         return matches[0].strip()
-#     return None
-
 import re
 
 
@@ -157,25 +140,10 @@ def parse_agent_markdown(markdown: str):
     parameters = extract_code(extract_section_content(markdown, "##### Parameters"))
     if parameters:
         parameters = json.loads(parameters)
-    return description, code_path, command, parameters
-
-
-def get_agent_vars_from_redis(
-    fields: List[str] = ["name", "type", "command", "func", "page_id"]
-):
-    redis = Redis("redis", decode_responses=True)
-    keys = []
-    cursor = 0
-    while True:
-        cursor, batch = redis.scan(cursor=cursor, match="agent:*")
-        keys.extend(batch)
-        if cursor == 0:
-            break
-    pipeline = redis.pipeline()
-    for agent_key in keys:
-        pipeline.hmget(agent_key, fields)
-    agents = pipeline.execute()
-    return agents
+    tools = extract_code(extract_section_content(markdown, "##### Tools"))
+    if tools:
+        tools = json.loads(tools)
+    return description, code_path, command, parameters, tools
 
 
 def flatten_list(nested_list):
@@ -197,3 +165,17 @@ def flatten_list(nested_list):
             # Append non-list items directly
             flattened.append(item)
     return flattened
+
+
+from shared.models import RedisAgent
+
+
+def get_llm(agent: RedisAgent):
+    from tapeagents.llms import LiteLLM
+
+    llm_params = {}
+    if "llm_temperature" in agent.parameters:
+        llm_params["temperature"] = agent.parameters["llm_temperature"]
+    return LiteLLM(
+        model_name=agent.parameters.get("llm", DEFAULT_LLM), parameters=llm_params
+    )

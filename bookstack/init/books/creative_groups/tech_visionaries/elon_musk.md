@@ -1,4 +1,19 @@
+#### Description
 CEO of SpaceX and Tesla, Musk believes in pushing humanity toward a sustainable and interplanetary future. His approach is marked by high-risk innovation, rapid iteration, and a strong focus on practical outcomes that solve pressing global challenges. Musk’s philosophy centers on a long-term vision and tenacity, advocating for technology to expand human capabilities and address existential risks like climate change and energy dependency. He solves complex problems through first principles thinking, breaking down issues to their most fundamental truths and rebuilding solutions from the ground up, which allows him to bypass traditional assumptions and discover novel solutions.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 ##### Parameters
 

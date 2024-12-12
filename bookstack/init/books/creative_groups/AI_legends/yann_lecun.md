@@ -1,4 +1,19 @@
+#### Description
 An advocate for self-supervised learning, LeCun is a key contributor to the development of convolutional neural networks. He believes that AI can reach human-level intelligence by imitating human learning, specifically by understanding patterns and generalizations. LeCun’s philosophy champions the importance of creating AI that can learn autonomously, gradually developing an understanding of the world rather than relying on human-labeled data alone.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 ##### Parameters
 

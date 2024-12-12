@@ -13,6 +13,7 @@ You can use the following userdefined_actions:
 {userdefined_actions}
 
 DON'T MAKE UP USERDEFINED ACTIONS! ONLY USED USERDEFINED ACTIONS THAT ARE LISTED ABOVE!
+
 """
 
 PLAN_GUIDANCE = f"Write a natural language plan on how to use tools to help the user. Respond with kind='plan'. {short_format_instruction}"

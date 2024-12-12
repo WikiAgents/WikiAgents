@@ -451,9 +451,13 @@ with SessionLocal() as session:
                     page = create_page(
                         book.id, 0, agent_name, agent_slug, False, agent["markdown"]
                     )
-                    description, code_path, command, parameters = parse_agent_markdown(
-                        agent["markdown"]
-                    )
+                    (
+                        description,
+                        code_path,
+                        command,
+                        parameters,
+                        tools,
+                    ) = parse_agent_markdown(agent["markdown"])
                     # tools = markdown_list_to_list(extract_code(extract_section_content(agent["markdown"], "##### Tools"))) #TODO
 
                     AgentOnboarding().onboard_agent(
@@ -485,6 +489,7 @@ with SessionLocal() as session:
                             code_path,
                             command,
                             parameters,
+                            tools,
                         ) = parse_agent_markdown(agent["markdown"])
                         page = create_page(
                             book.id,
@@ -539,15 +544,23 @@ with SessionLocal() as session:
                             False,
                             agent["markdown"],
                         )
-                        _, _, parameters = parse_agent_markdown(agent["markdown"])
+                        (
+                            description,
+                            code_path,
+                            command,
+                            parameters,
+                            tools,
+                        ) = parse_agent_markdown(agent["markdown"])
                         AgentOnboarding().onboard_agent(
                             RedisAgent(
                                 name=agent_name,
                                 type="creative_agent",
                                 page_id=page.id,
-                                command="/brainstorm",
-                                code_path="agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming",
+                                description=description,
+                                command=command,
+                                code_path=code_path,
                                 parameters=parameters,
+                                tools=tools,
                             )
                         )
                         for t in [

@@ -26,9 +26,8 @@ from agents.content_generators.chain_of_thought_agent.tape import (
 )
 
 from agents.base.environment import WikiAgentsEnvironment
-
-
-llm = LiteLLM(model_name="gpt-4o-mini-2024-07-18")
+from shared.constants import DEFAULT_LLM
+from shared.utils import get_llm
 
 
 class PlanActNode(WikiAgentsMonoNode[WikiAgentsTape]):
@@ -48,7 +47,7 @@ class ChainOfThoughAgent(WikiAgentBase):
         wiki_context: WikiContextInfo | dict,
         instructions: str,
     ) -> str:
-
+        llm = get_llm(agent_context)
         env = WikiAgentsEnvironment("WikiAgent")
         tape = ChainOfThoughtAgentTape(
             steps=[
@@ -64,7 +63,8 @@ class ChainOfThoughAgent(WikiAgentBase):
                     name="plan",
                     system_prompt=PromptRegistry.plan_system_prompt.format(
                         userdefined_actions=userdefined_actions
-                    ),
+                    )
+                    + agent_context.parameters.get("additional_system_prompt", ""),
                     guidance=PromptRegistry.plan_guidance,
                     allowed_steps=plan_steps,
                     next_node="act",
@@ -73,7 +73,8 @@ class ChainOfThoughAgent(WikiAgentBase):
                     name="act",
                     system_prompt=PromptRegistry.plan_system_prompt.format(
                         userdefined_actions=userdefined_actions
-                    ),
+                    )
+                    + agent_context.parameters.get("additional_system_prompt", ""),
                     guidance=PromptRegistry.act_guidance,
                     allowed_steps=act_steps,
                     next_node="plan",

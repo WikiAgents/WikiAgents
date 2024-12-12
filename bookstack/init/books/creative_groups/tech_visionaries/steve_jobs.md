@@ -1,4 +1,19 @@
+#### Description
 Co-founder of Apple, Jobs had a vision that technology should not only work well but also delight and inspire. His philosophy emphasized simplicity, creativity, and a relentless focus on user experience. Jobs believed in merging art and technology, advocating for a holistic approach to product development that included design, functionality, and storytelling. He valued passion, intuition, and the pursuit of perfection in every product.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 ##### Parameters
 

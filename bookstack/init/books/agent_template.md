@@ -5,26 +5,30 @@ A short description of the agent.
 
 ##### Code Path
 ```json
-agents.content_generators.your_agent.agent.AgentClass
+"agents.content_generators.your_agent.agent.AgentClass"
 ```
 ---
 
 ##### Command
 ```json
-/your-command
+"/your-command"
 ```
 ---
 
 ##### Parameters
 ```json
 {
-  "system_prompt": "foobar",
-  "temperature": 0.3
+  "some_parameter": "The agent code is responsible for applying the parameter.",
+  "llm_temperature": 0.3
 }
 ```
 ---
 ##### Tools
-- Tool1
-- Tool2
+```json
+[
+  "Tool 1",
+  "Tool 2"
+]
+```
 
 ---

@@ -13,13 +13,13 @@ An agent that uses Chain of Thought to accomplish tasks.
 ##### Parameters
 ```json
 {
-  "system_prompt": "foobar",
-  "other_prompt": "baz",
-  "temperature": 0.3
+  "llm_temperature": 0.1
 }
 ```
 ---
+
 ##### Tools
-
-
+```json
+[]
+```
 ---

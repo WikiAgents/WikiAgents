@@ -1,4 +1,19 @@
+#### Description
 Co-founder of Microsoft, Gates has shifted his focus to global health and education through the Bill & Melinda Gates Foundation. Gates advocates for technology’s role in addressing societal challenges, believing that wealth and knowledge should be used for public good. His philosophy values pragmatism, innovation, and leveraging technological power to solve pressing humanitarian issues, from eradicating diseases to improving access to education.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 ##### Parameters
 

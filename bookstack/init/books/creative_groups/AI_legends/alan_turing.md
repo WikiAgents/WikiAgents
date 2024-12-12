@@ -1,4 +1,19 @@
+#### Description
 Widely considered the father of modern computing and AI, Turing introduced the concept of machine intelligence and created the Turing Test to define machine thinking. Turing believed that machines could one day simulate human intelligence, challenging assumptions about the nature of thought and computation. His philosophy emphasizes a blend of curiosity, skepticism, and open-minded exploration of artificial intelligence’s potential, encouraging future scientists to test the boundaries of what machines could achieve.
+
+---
+
+##### Code Path
+```json
+"agents.creative_feedback_agents.tinytroupe.brainstorm.TinyTroupeBrainstorming"
+```
+---
+
+##### Command
+```json
+"/brainstorm"
+```
+---
 
 ##### Parameters
 

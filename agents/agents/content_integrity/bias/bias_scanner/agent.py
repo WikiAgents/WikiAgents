@@ -26,6 +26,7 @@ from shared.constants import (
     PROJECT_METADATA_BOOK_NAME,
 )
 from shared.models import RedisAgent, WikiContextInfo
+from shared.utils import get_llm
 
 
 class BiasScannerResult(Action):
@@ -93,12 +94,13 @@ class BiasScanner(WikiAgentBase):
             agent_context = RedisAgent(**agent_context)
         if isinstance(wiki_context, dict):
             wiki_context = WikiContextInfo(**wiki_context)
+        llm = get_llm(agent_context)
         client = AgentBookStackClient("BiasScanner")
         page_markdown = client.export_page(wiki_context.page_id, export_type="markdown")
         agent = Agent.create(
             name="BiasScanner",
             nodes=[LanguageDetectorNode(), BiasScannerNode()],
-            llms=LiteLLM(model_name="gpt-4o-mini", parameters={"temperature": 0.15}),
+            llms=llm,
         )
         input_tape = BiasScannerTape(steps=[UserStep(content=page_markdown)])
         final_tape = agent.run(input_tape).get_final_tape()
@@ -116,12 +118,13 @@ class BiasScanner(WikiAgentBase):
             ]
         if isinstance(wiki_context, dict):
             wiki_context = WikiContextInfo(**wiki_context)
+        llm = get_llm(agent_contexts[0])
         client = AgentBookStackClient("BiasScanner")
         page_markdown = client.export_page(wiki_context.page_id, export_type="markdown")
         agent = Agent.create(
             name="BiasScanner",
             nodes=[LanguageDetectorNode(), BiasScannerNode()],
-            llms=LiteLLM(model_name="gpt-4o-mini", parameters={"temperature": 0.15}),
+            llms=llm,
         )
         input_tape = BiasScannerTape(steps=[UserStep(content=page_markdown)])
         final_tape = agent.run(input_tape).get_final_tape()

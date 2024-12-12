@@ -1,3 +1,8 @@
+import os
+
+DEFAULT_LLM = os.environ.get("DEFAULT_LLM", "gpt-4o-mini-2024-07-18")
+
+
 PROJECT_METADATA_BOOK_NAME = "🗃️ Metadata"
 PROJECT_METADATA_BOOK_DESCRIPTION = "Central control for the project."
 

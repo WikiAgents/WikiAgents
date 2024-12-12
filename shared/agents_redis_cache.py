@@ -29,9 +29,12 @@ class AgentsRedisCache:
             )
         if tools:
             self.redis.hset(
-                f"agent:{agent.name}:tools",
-                mapping={k: json.dumps(v) for k, v in tools.items()},
+                f"agent:{agent.name}:tools", mapping={"tools": json.dumps(tools)}
             )
+            # self.redis.hset(
+            #     f"agent:{agent.name}:tools",
+            #     mapping={k: json.dumps(v) for k, v in tools.items()},
+            # )
 
     def get_agent(self, name: str):
         agent = RedisAgent(**self.redis.hgetall(f"agent:{name}"))
@@ -39,10 +42,11 @@ class AgentsRedisCache:
             k: json.loads(v)
             for k, v in self.redis.hgetall(f"agent:{name}:parameters").items()
         }
-        agent.tools = {
-            k: json.loads(v)
-            for k, v in self.redis.hgetall(f"agent:{name}:tools").items()
-        }
+        agent.tools = json.loads(self.redis.hget(f"agent:{name}:tools", "tools"))
+        # agent.tools = {
+        #     k: json.loads(v)
+        #     for k, v in self.redis.hgetall(f"agent:{name}:tools").items()
+        # }
         return agent
 
     def delete_agent(self, name: str):
@@ -70,10 +74,12 @@ class AgentsRedisCache:
                 k: json.loads(v)
                 for k, v in self.redis.hgetall(f"agent:{a.name}:parameters").items()
             }
-            a.tools = {
-                k: json.loads(v)
-                for k, v in self.redis.hgetall(f"agent:{a.name}:tools").items()
-            }
+            a.tools = json.loads(self.redis.hget(f"agent:{a.name}:tools", "tools"))
+
+            # a.tools = {
+            #     k: json.loads(v)
+            #     for k, v in self.redis.hgetall(f"agent:{a.name}:tools").items()
+            # }
         return agents
 
     def get_agents_by_type(

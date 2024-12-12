@@ -124,6 +124,8 @@ To get started with WikiAgents, follow these steps:
 - **phpMyAdmin:** [http://localhost:8001](http://localhost:8001)  
 - **Redis Insight:** [http://localhost:5540](http://localhost:5540)  
 
+## Guides
+Check out the [User Guide](docs/user_guide.md)
 
 ## Architecture Overview
 
@@ -134,8 +136,9 @@ To get started with WikiAgents, follow these steps:
 
 - **Built on top of [BookStack](https://www.bookstackapp.com/)**: An exceptional open-source platform for organizing and managing documents. Its flexibility, user-friendly design and feature-completeness were key to the success of this project.
 - **Powered by [TapeAgents](https://github.com/ServiceNow/TapeAgents)**, an agent framework provided by [ServiceNow](https://www.servicenow.com/), enabling advanced agent functionalities and transparency.
-- Developed during the [**LLM Agents Hackathon**](https://rdi.berkeley.edu/llm-agents-hackathon/) hosted by [Berkeley RDI](https://rdi.berkeley.edu/), which provided the perfect framework and motivation for this project.
-- Supported by the [**LLM Agent MOOC**](https://llmagents-learning.org/f24) offered by [Berkeley RDI](https://rdi.berkeley.edu/), enriching my understanding of LLM agents and their capabilities.
+- **Developed during the [LLM Agents Hackathon](https://rdi.berkeley.edu/llm-agents-hackathon/)** hosted by [Berkeley RDI](https://rdi.berkeley.edu/), which provided the perfect framework and motivation for this project.
+- **Supported by the [LLM Agent MOOC](https://llmagents-learning.org/f24)** offered by [Berkeley RDI](https://rdi.berkeley.edu/), enriching my understanding of LLM agents and their capabilities.
+- **Enabled by [OpenAI](https://openai.com/) and [ChatGPT](https://chatgpt.com/)**, which served as an invaluable virtual collaborator, contributing to idea refinement, enabling rapid development and documentation, and powering the LLM backend through API integration.
 - This project makes use of methodologies and ideas from various research papers, including:   
 
   Bahdanau, Dzmitry, Nicolas Gontier, Gabriel Huang, Ehsan Kamalloo, Rafael Pardinas, Alexandre Piche, Torsten Scholak, Oleh Shliazhko, Jordan Prince Tremblay, Karam Ghanem, Soham Parikh, Mitul Tiwari, and Quaizar Vohra. **"TapeAgents: a Holistic Framework for Agent Development and Optimization."**
@@ -158,7 +161,8 @@ To get started with WikiAgents, follow these steps:
 - All **LLM agent personas** in this project are entirely **fictional** and have no relation to any real-world individuals, entities, or organizations. Any resemblance to actual persons, living or dead, is purely coincidental.
 
 
-## Commercial Usage
+## Known Limitations
 
-This project is provided under the terms outlined in the [LICENSE.md](LICENSE.md) file. Commercial usage is subject to the conditions specified in the license. Please refer to the LICENSE file for detailed information on usage rights and restrictions.
+- **Page Refresh Mechanism**: The current page refresh mechanism is not yet optimized and may be heavy on bandwidth. This could result in higher data usage or slower performance in some cases. Improvements to make this process more efficient are planned for future updates.
+
 

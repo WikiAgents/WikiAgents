@@ -48,4 +48,4 @@ class RedisAgent(BaseModel):
     token_secret: Optional[str] = None
     user_id: Optional[int] = None
     parameters: Optional[dict] = None
-    tools: Optional[dict] = None
+    tools: Optional[List[dict]] = None  # [{"name": "Tool1", "id": page_id}]
