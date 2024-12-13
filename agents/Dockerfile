@@ -15,7 +15,7 @@ RUN conda run --no-capture-output --name agents pip install -e .
 WORKDIR /TinyTroupe
 RUN conda run --no-capture-output --name agents pip install -e .
 
-RUN conda run --no-capture-output --name agents pip install rq rq-scheduler requests bcrypt sqlalchemy mysql-connector-python docling
+RUN conda run --no-capture-output --name agents pip install rq rq-scheduler requests bcrypt sqlalchemy mysql-connector-python docling wikipedia
 
 
 ENV CONDA_DEFAULT_ENV agents

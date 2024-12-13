@@ -10,7 +10,7 @@ Do not reproduce schema when producing the steps, use it as a reference.
 
 PLAN_SYSTEM_PROMPT = """Use as many relevant tools/actions as possible to include more details and facts in your responses.
 You can use the following userdefined_actions:
-{userdefined_actions}
+{userdefined_tools}
 
 DON'T MAKE UP USERDEFINED ACTIONS! ONLY USED USERDEFINED ACTIONS THAT ARE LISTED ABOVE!
 

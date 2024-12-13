@@ -36,9 +36,15 @@ class WikiContextInfo(BaseModel):
 
 
 class RedisAgent(BaseModel):
-    type: Literal[
-        "content_agent", "creative_agent", "integrity_agent", "wikiagent", "transcriber"
-    ]
+    type: Optional[
+        Literal[
+            "content_agent",
+            "creative_agent",
+            "integrity_agent",
+            "wikiagent",
+            "transcriber",
+        ]
+    ] = None
     name: str
     page_id: Optional[int] = None
     code_path: Optional[str] = None
@@ -48,4 +54,13 @@ class RedisAgent(BaseModel):
     token_secret: Optional[str] = None
     user_id: Optional[int] = None
     parameters: Optional[dict] = None
-    tools: Optional[List[dict]] = None  # [{"name": "Tool1", "id": page_id}]
+    tools: Optional[List[str]] = None
+
+
+class UserdefinedTool(BaseModel):
+    name: str
+    tool_id: int
+    code: str
+    description: Optional[str]
+    function_name: Optional[str]
+    parameters: Optional[dict]

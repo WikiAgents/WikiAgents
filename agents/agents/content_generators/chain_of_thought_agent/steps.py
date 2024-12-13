@@ -10,8 +10,8 @@ from agents.base.steps import (
     WikiAgentsStep,
     ReadPageAction,
     ReadPageObservation,
-    UserDefinedAction,
-    UserDefinedActionObservation,
+    UserDefinedTool,
+    UserDefinedToolObservation,
 )
 
 
@@ -29,10 +29,7 @@ ChainOfThoughtAgentTapeStep = (
 
 
 ChainOfThoughtAgentStep: TypeAlias = Annotated[
-    Union[
-        PlanThought,
-    ]
-    | WikiAgentsTapeStep,
+    ChainOfThoughtAgentTapeStep,
     Field(discriminator="kind"),
 ]
 
@@ -49,8 +46,8 @@ act_steps = get_step_schemas_from_union_type(
         Union[
             ReadPageAction,
             ReadPageObservation,
-            UserDefinedAction,
-            UserDefinedActionObservation,
+            UserDefinedTool,
+            UserDefinedToolObservation,
         ],
         Field(discriminator="kind"),
     ]

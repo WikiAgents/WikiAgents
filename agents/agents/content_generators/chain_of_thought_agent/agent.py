@@ -28,6 +28,7 @@ from agents.content_generators.chain_of_thought_agent.tape import (
 from agents.base.environment import WikiAgentsEnvironment
 from shared.constants import DEFAULT_LLM
 from shared.utils import get_llm
+from shared.tools_redis_cache import ToolsRedisCache
 
 
 class PlanActNode(WikiAgentsMonoNode[WikiAgentsTape]):
@@ -37,16 +38,22 @@ class PlanActNode(WikiAgentsMonoNode[WikiAgentsTape]):
     agent_step_cls: Any = Field(exclude=True, default=ChainOfThoughtAgentStep)
 
 
-userdefined_actions = [{"function": "get_recipies", "parameters": {}}]
-
-
-class ChainOfThoughAgent(WikiAgentBase):
+class ChainOfThoughtAgent(WikiAgentBase):
     @staticmethod
     def generate(
         agent_context: RedisAgent | dict,
         wiki_context: WikiContextInfo | dict,
         instructions: str,
     ) -> str:
+        tools = [ToolsRedisCache().get_tool(t) for t in agent_context.tools]
+        tools = [
+            {
+                "tool_name": t.name,
+                "description": t.description,
+                "parameters": t.parameters,
+            }
+            for t in tools
+        ]
         llm = get_llm(agent_context)
         env = WikiAgentsEnvironment("WikiAgent")
         tape = ChainOfThoughtAgentTape(
@@ -62,7 +69,7 @@ class ChainOfThoughAgent(WikiAgentBase):
                 PlanActNode(
                     name="plan",
                     system_prompt=PromptRegistry.plan_system_prompt.format(
-                        userdefined_actions=userdefined_actions
+                        userdefined_tools=tools
                     )
                     + agent_context.parameters.get("additional_system_prompt", ""),
                     guidance=PromptRegistry.plan_guidance,
@@ -72,7 +79,7 @@ class ChainOfThoughAgent(WikiAgentBase):
                 PlanActNode(
                     name="act",
                     system_prompt=PromptRegistry.plan_system_prompt.format(
-                        userdefined_actions=userdefined_actions
+                        userdefined_tools=tools
                     )
                     + agent_context.parameters.get("additional_system_prompt", ""),
                     guidance=PromptRegistry.act_guidance,

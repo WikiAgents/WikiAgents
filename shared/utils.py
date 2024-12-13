@@ -115,8 +115,8 @@ def extract_code(text: str) -> str:
             elif tiks_counter == 2:
                 break
             continue
-        clean_lines.append(line)
-    return "\n".join(clean_lines)
+        clean_lines.append(line) if tiks_counter > 0 else None
+    return "\n".join(clean_lines) if len(clean_lines) > 0 else None
 
 
 def markdown_list_to_list(markdown: str):

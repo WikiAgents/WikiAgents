@@ -125,24 +125,4 @@ class AgentOnboarding:
                 session.add(api_token)
                 session.commit()
 
-                # redis.hset(f"agent:{name}", mapping={"name": name, "token_id": token_id, "token_secret": token_secret, "user_id": user.id})
-                # if add_tag:
-                #     AgentBookStackClient(name).update_page(page_id=page_id, tags=[{"name": "Agent", "value": name}])
             return user.id, token_id, token_secret
-
-
-# def set_agent_details(name: str, page_id: int, markdown: str, agent_type: AgentType):
-#     mapping = {"type": agent_type.value, "name": name, "page_id": page_id}
-#     func = extract_section_content(markdown, "#### Code Path")
-#     if func:
-#         mapping["func"] = func
-#     command = extract_section_content(markdown, "#### Wiki Command")
-#     if command:
-#         mapping["command"] = command
-#     redis.hset(f"agent:{name}", mapping=mapping)
-
-
-# def offboard_agent(name: str):
-#     user_id = redis.hget(f"agent:{name}", "user_id")
-#     redis.delete(f"agent:{name}")
-#     AgentBookStackClient("WikiAgent").delete_user(user_id.decode())

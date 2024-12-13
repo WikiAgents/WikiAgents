@@ -43,6 +43,8 @@ from shared.utils import (
     markdown_list_to_list,
     parse_agent_markdown,
 )
+from shared.tools_redis_cache import ToolsRedisCache
+from shared.utils import extract_code
 
 DB_USERNAME = os.environ["DB_USERNAME"]
 DB_PASSWORD = os.environ["DB_PASSWORD"]
@@ -179,10 +181,29 @@ def create_page(
     is_template: bool,
     markdown: str,
 ):
-    html = md2html(markdown)
-    html = html.replace("<p><code>json\n", '<pre><code class="language-json">').replace(
-        "</code></p>", "\n</code></pre>"
-    )
+    #     <pre id="bkmrk-import-wikipedia-def"><code class="language-python">import wikipedia
+
+    # def search_wikipedia(topic: str):
+    #     """
+    #     Search on Wikipedia for a given topic. Returns relevant Wikipedia page titles.
+
+    #     Args:
+    #         topic (str): The topic to search for.
+
+    #     Returns:
+    #         List[str]: The list of page titles.
+    #     """
+    #     result = wikipedia.search(topic, results=20)
+    #     return result
+    # </code></pre>
+
+    if markdown.startswith("```python"):
+        code = extract_code(markdown)
+        html = f'<pre><code class="language-python">{code}\n</code></pre>'
+    else:
+        html = md2html(markdown)
+        html = html.replace("<p><code>json\n", '<pre><code class="language-json">')
+        html = html.replace("</code></p>", "\n</code></pre>")
     page = Page(
         book_id=book_id,
         chapter_id=chapter_id,
@@ -351,6 +372,42 @@ def parse_content_task_agents(base_path):
                 except Exception as e:
                     print(f"Error reading file {file_name}: {e}")
     return agents
+
+
+def parse_tools(base_path):
+    groups = []
+    try:
+        for folder_name in os.listdir(base_path):
+            folder_path = os.path.join(base_path, folder_name)
+            if os.path.isdir(folder_path):
+                group_name = " ".join(
+                    [
+                        s.capitalize() if s[0].islower() else s
+                        for s in folder_path.split("/")[-1].split("_")
+                    ]
+                )
+                group = {"name": group_name, "tools": {}}
+                for file_name in os.listdir(folder_path):
+                    if file_name.endswith(".md"):
+                        file_path = os.path.join(folder_path, file_name)
+                        try:
+                            with open(file_path, "r", encoding="utf-8") as md_file:
+                                content = md_file.read()
+                                name = " ".join(
+                                    [
+                                        s.capitalize() if s[0].islower() else s
+                                        for s in ntpath.basename(file_path)[:-3].split(
+                                            "_"
+                                        )
+                                    ]
+                                )
+                                group["tools"][name] = {"markdown": content}
+                        except Exception as e:
+                            print(f"Error reading file {file_name}: {e}")
+                groups.append(group)
+    except Exception as e:
+        print(f"Error processing base path {base_path}: {e}")
+    return groups
 
 
 shelves = [
@@ -576,3 +633,32 @@ with SessionLocal() as session:
                             )
                             session.add(tag)
                         session.commit()
+
+            elif slug == "tools":
+                groups = parse_tools("/custom_init/books/tools")
+                for g in groups:
+                    name = g["name"]
+                    chapter = create_chapter(
+                        book.id,
+                        name,
+                        slug=name.replace(" ", "-").replace("_", "-"),
+                        description=" ",
+                    )
+                    for tool_name, tool in g["tools"].items():
+                        tool_slug = tool_name.lower().replace(" ", "-")
+                        page = create_page(
+                            book.id,
+                            chapter.id,
+                            tool_name,
+                            tool_slug,
+                            False,
+                            tool["markdown"],
+                        )  #
+                        code = extract_code(tool["markdown"])
+                        updated, error = ToolsRedisCache().update_tool(
+                            tool_name, tool_id=page.id, code=code
+                        )
+                        if updated:
+                            print(f"Created Tool: {tool_name}")
+                        else:
+                            print(f"Unable to create Tool: {tool_name}")

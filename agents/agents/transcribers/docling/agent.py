@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from agents.agents.base_agent import WikiAgentBase
-from agents.steps import CommentResponse
+from agents.base.agent import WikiAgentBase
+from agents.base.steps import CommentResponse
 from docling.document_converter import DocumentConverter
 
 from shared.bookstack_client import AgentBookStackClient

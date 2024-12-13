@@ -110,3 +110,8 @@ PROJECT_CONTENT_INTEGRITY_AGENTS_CHAPTER_DESCRIPTION = "Content Integrity Agents
 
 PROJECT_TAPES_CHAPTER_NAME = "📼 Tapes"
 PROJECT_TAPES_CHAPTER_DESCRIPTION = "The tapes associated with this project"
+
+
+TOOL_CREATE_COMMENT = "🚀 The tool has been successfully created!"
+TOOL_UPDATE_COMMENT = "🚀 The tool has been successfully updated!"
+TOOL_FAILED_COMMENT = "💥 Natural language tool generation not supported yet! Tool pages must contain python code in triple quotes."

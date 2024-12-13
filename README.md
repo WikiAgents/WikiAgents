@@ -11,7 +11,7 @@ Designed for both technical and non-technical users, WikiAgents makes it easy to
   Users provide a brief description of their goal, and WikiAgents automatically suggests a tailored project structure, including recommended agents, tools and requirements. Users can further refine the project, adjust settings, and start the generation process with minimal effort.
 
 - **Content & Task Agents**  
-  WikiAgents includes predefined agents for general content generation and task-solving. These agents can coordinate with each other to manage complex workflows. Users can also customize or integrate their own agents by creating dedicated agent pages to suit specific project needs.
+  WikiAgents includes predefined agents for general content generation and task-solving. The project agent coordinates these agents to manage complex workflows. Users can also customize or integrate their own agents by creating dedicated agent pages to suit specific project needs.
 
 - **Customizable Tools**  
   WikiAgents allows users to create custom tools for agents to solve specific tasks. These tools can be easily added and configured through dedicated tool pages in the platform, enabling tailored workflows and expanded agent capabilities.
@@ -50,9 +50,6 @@ Designed for both technical and non-technical users, WikiAgents makes it easy to
 
 - **Academic Research Collaboration**  
   Facilitate collaborative research by enabling the development, testing, and refinement of custom LLM agents for generating, refining, and verifying content.
-
-- **Dynamic Document Creation**  
-  Automatically generate and update complex documents, reports, and manuals, leveraging real-time collaboration and agent-driven processes.
 
 - **Marketing Content Creation**
   Automate the generation and refinement of marketing materials, from ad copy and social media posts to in-depth campaign strategies, tailored to specific audience segments.
@@ -165,4 +162,6 @@ Check out the [User Guide](docs/user_guide.md)
 
 - **Page Refresh Mechanism**: The current page refresh mechanism is not yet optimized and may be heavy on bandwidth. This could result in higher data usage or slower performance in some cases. Improvements to make this process more efficient are planned for future updates.
 
+- **Renaming Agent & Tool Pages**: Renaming agent and tools pages is not supported right now and may lead to unexpected results. Users are advised to recreate these pages instead of renaming them to avoid issues.
 
+- **Unique Page Names**: Agent page names and page names within a project must be unique to prevent ambiguity and ensure proper functionality. Avoid using duplicate names for different pages.

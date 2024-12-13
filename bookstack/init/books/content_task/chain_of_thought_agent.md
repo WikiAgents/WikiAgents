@@ -20,6 +20,6 @@ An agent that uses Chain of Thought to accomplish tasks.
 
 ##### Tools
 ```json
-[]
+["Wikipedia Search", "Wikipedia Summary"]
 ```
 ---

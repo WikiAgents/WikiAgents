@@ -169,22 +169,19 @@ class WikiAgentsEnvironment(Environment):
                         pass
                     case LLMOutputParsingFailureAction():
                         pass
-                    case UserDefinedAction():
-                        if action.function == "get_recipies":
-                            tape = tape.append(
-                                UserDefinedActionObservation(
-                                    output="Chana masala: chick peas and spices"
-                                )
-                            )
-                        else:
-                            job = self.queue.enqueue(
-                                action.function, kwargs=action.parameters
-                            )
-                            tape = tape.append(
-                                UserDefinedActionObservation(
-                                    output=job.result if job.result else ""
-                                )
-                            )
+                    case UserDefinedTool():
+                        job = self.queue.enqueue(
+                            "tools.userdefined_tool.run",
+                            kwargs={
+                                "tool_name": action.tool_name,
+                                "parameters": action.parameters,
+                            },
+                        )
+                        if job.get_status().value == "failed":
+                            output = job.exc_info
+                        elif job.get_status().value == "finished":
+                            output = job.result if job.result else "Tool returned None"
+                        tape = tape.append(UserDefinedToolObservation(output=output))
 
             except FatalError:
                 raise

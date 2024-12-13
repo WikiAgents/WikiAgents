@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal, Optional, TypeAlias, Union
+from typing import Annotated, List, Literal, Optional, TypeAlias, Union, Any
 
 from pydantic import BaseModel, Field
 from tapeagents.core import (
@@ -333,19 +333,19 @@ class ActionExecutionFailure(WikiAgentsObservation, Error):
 # User-defined Actions
 
 
-class UserDefinedAction(WikiAgentsAction):
+class UserDefinedTool(WikiAgentsAction):
     """
     Action that calls a user-defined tool.
     """
 
-    kind: Literal["userdefined_action"] = "userdefined_action"
-    function: str = Field(description="The name of the function to call.")
+    kind: Literal["userdefined_tool"] = "userdefined_tool"
+    tool_name: str = Field(description="The name of the userdefined tool to call.")
     parameters: dict = Field(description="the ")
 
 
-class UserDefinedActionObservation(WikiAgentsObservation):
-    kind: Literal["userdefined_action_observation"] = "userdefined_action_observation"
-    output: str
+class UserDefinedToolObservation(WikiAgentsObservation):
+    kind: Literal["userdefined_tool_observation"] = "userdefined_tool_observation"
+    output: Any
 
 
 WikiAgentsTapeStep = Union[
@@ -381,8 +381,8 @@ WikiAgentsTapeStep = Union[
     ReadCommentsObservation,
     ReadCommentReplyObservation,
     # User-defined tools
-    UserDefinedAction,
-    UserDefinedActionObservation,
+    UserDefinedTool,
+    UserDefinedToolObservation,
     # Others
     LLMOutputParsingFailureAction,
     ActionExecutionFailure,
