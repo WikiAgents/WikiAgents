@@ -152,7 +152,7 @@ class StopNode(Node):
     name: str = "stop"
 
     def generate_steps(self, agent: Agent, tape: DialogTape, llm_stream: LLMStream):
-        yield StopStep(kind="stop")
+        yield StopStep()
 
 
 class CommentControlFlowNode(ControlFlowNode):

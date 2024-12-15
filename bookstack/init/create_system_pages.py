@@ -565,6 +565,7 @@ with SessionLocal() as session:
                                 code_path=code_path,
                                 command=command,
                                 parameters=parameters,
+                                tools=tools,
                             )
                         )
                         for t in [
@@ -592,6 +593,7 @@ with SessionLocal() as session:
                         description=g["environment"],
                     )
                     for agent_name, agent in g["persons"].items():
+                        agent_name = agent_name.replace("lecun", "LeCun")
                         agent_slug = agent_name.lower().replace(" ", "-")
                         page = create_page(
                             book.id,

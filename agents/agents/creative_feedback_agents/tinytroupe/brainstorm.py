@@ -7,13 +7,13 @@ from agents.base.agent import WikiAgentBase
 from agents.base.steps import CommentResponse
 from bs4 import BeautifulSoup
 from tinytroupe.agent import TinyPerson
-from tinytroupe.control import transactional
-from tinytroupe.environment import TinySocialNetwork, TinyWorld
+
 
 from shared.agents_redis_cache import AgentsRedisCache
 from shared.bookstack_client import AgentBookStackClient
 from shared.models import RedisAgent, WikiContextInfo
 from shared.utils import get_project_metadata_for_page
+from agents.creative_feedback_agents.tinytroupe.wikiworld import TinyWikiWorld
 
 BRAINSTORM_PROMPT = """Alright folks, let's all focus on the document and brainstorm about it.
 Here is the document:
@@ -22,12 +22,13 @@ Here is the document:
 
 DOCUMENT END
 
-When you talk, use HTML styling tags to make a structured response. The following tags are supported: <strong>, <i>, <li>, <ul>. DO NOT USE <br> in the beginning of your output!
-You are encouraged to use emojis when appropriate.
+When you talk, use the <strong> </strong> tag to highlight words!
 Start with the brainstorming now.
 """
 
-SUMMARY_PROMPT = "Can you please consolidate the ideas that the group came up with? Provide a lot of details on each idea, and complement anything missing."
+SUMMARY_PROMPT = """Can you please consolidate the ideas that the group came up with? Provide a lot of details on each idea, and complement anything missing.
+Use a html list in your output like so: <ul><li>Example</li><li>Example2</li></ul>
+"""
 
 
 def extract_rounds(comment: str):
@@ -40,19 +41,8 @@ def extract_rounds(comment: str):
     return comment, None
 
 
-class TinyWikiWorld(TinyWorld):
-    def set_wiki_context(self, page_id: int, comment_id: Optional[int] = None):
-        self.page_id = page_id
-        self.comment_id = comment_id
-
-    @transactional
-    def _handle_talk(self, source_agent: TinyPerson, content: str, target: str):
-        super()._handle_talk(source_agent=source_agent, content=content, target=target)
-        client = AgentBookStackClient(source_agent.name)
-        client.create_comment(content, page_id=self.page_id, parent_id=self.comment_id)
-
-
 class TinyTroupeBrainstorming(WikiAgentBase):
+    @staticmethod
     def react_to_command(
         agent_contexts: List[RedisAgent] | List[dict],
         wiki_context: WikiContextInfo | dict,
@@ -104,7 +94,7 @@ class TinyTroupeBrainstorming(WikiAgentBase):
             return [
                 CommentResponse(
                     agent_name=agents[0].name,
-                    comment="Everyone's so deep in thought, they forgot to come back with answers! Try to refine the goal.",
+                    comment="💥 Everyone's so deep in thought, they forgot to come back with answers! Try to refine the goal.",
                 )
             ]
         return [CommentResponse(agent_name=agents[0].name, comment=t) for t in talks]

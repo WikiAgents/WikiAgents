@@ -1,5 +1,5 @@
 ##### Description
-An agent that uses Chain of Thought to accomplish tasks.
+An agent that uses Chain of Thought reasoning. Has Wikipedia access.
 
 ---
 
@@ -13,6 +13,7 @@ An agent that uses Chain of Thought to accomplish tasks.
 ##### Parameters
 ```json
 {
+  "additional_system_prompt": "",
   "llm_temperature": 0.1
 }
 ```

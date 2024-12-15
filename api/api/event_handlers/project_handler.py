@@ -1,6 +1,8 @@
 from api.event_handlers.base_handler import BaseEventHandler
 from api.models.webhook_payloads import BookStackRelatedItem, BookStackWebhookPayload
 from shared.constants import *
+from shared.agents_redis_cache import AgentsRedisCache
+import json
 
 
 class ProjectEventHandler(BaseEventHandler):
@@ -11,11 +13,21 @@ class ProjectEventHandler(BaseEventHandler):
             PROJECT_METADATA_BOOK_NAME, description=PROJECT_METADATA_BOOK_DESCRIPTION
         )
         self.client.update_shelf(project["id"], books=[metadata_book["id"]])
+        creative_agents = AgentsRedisCache().get_agents_by_type("creative_agent")
+        creative_agents = [a.name for a in creative_agents]
+        configured_creatives = {"agents": [], "rounds": 3}
+        grounding = {
+            "agent": "Prompt Grounder",
+            "grounding": ["<knowledge_base_book>/<knowledge_base_page>"],
+        }
         requirements_page = self.client.create_page(
             metadata_book["id"],
             name=PROJECT_REQUIREMENTS_PAGE_NAME,
             markdown=PROJECT_REQUIREMENTS_STEP_1.format(
-                project_description=description
+                project_description=description,
+                configured_creatives=f"```json\n{json.dumps(configured_creatives, indent=2)}\n```",
+                available_creatives=f"```json\n{json.dumps(creative_agents)}\n```",
+                grounding=f"```json\n{json.dumps(grounding, indent=2)}\n```",
             ),
             tags=[{"name": "WikiAgents", "value": "Requirements"}],
         )

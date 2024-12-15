@@ -74,6 +74,3 @@ def save_project_requirements_tape(
                     "Tape", uploaded_to=wiki_context.page_id, link=f"/link/{page['id']}"
                 )
             break
-
-
-from agents.wikiagent.project_agent.steps import ProjectMetadata

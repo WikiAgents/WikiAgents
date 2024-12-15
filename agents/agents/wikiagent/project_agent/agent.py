@@ -17,6 +17,7 @@ from agents.wikiagent.project_agent.steps import (
     project_requirements_refinement_steps,
     agent_selection_plan_steps,
     ProjectPlannerAgentTapeStep,
+    FinalRefineProjectRequirementsThought,
 )
 from agents.wikiagent.project_agent.tape import ProjectPlannerTape
 from pydantic import Field
@@ -44,7 +45,8 @@ from tools.wikiagents.fact_checker import fact_checker
 from tools.wikiagents.generic_rq_tool_wrapper import call_rq_function
 
 from shared.bookstack_client import AgentBookStackClient
-from shared.constants import *
+
+# from shared.constants import *
 
 from shared.models import ProjectContextInfo, WikiContextInfo
 from agents.base.nodes import WikiAgentsMonoNode
@@ -54,7 +56,16 @@ from agents.wikiagent.project_agent.utils import (
     save_project_requirements_tape,
 )
 
-from shared.utils import extract_section_content
+from shared.utils import extract_section_content, extract_code
+from agents.wikiagent.project_agent.wizard_content import *
+from shared.agents_redis_cache import AgentsRedisCache, RedisAgent
+
+from agents.creative_feedback_agents.tinytroupe.brainstorm import (
+    TinyTroupeBrainstorming,
+)
+from agents.creative_feedback_agents.tinytroupe.project_brainstorming import (
+    project_requirements_brainstorming,
+)
 
 
 llm = LiteLLM(
@@ -87,48 +98,113 @@ class ProjectRequirementsWizard:
         }
 
     def run_next_step(self):
-        current_step = self.page_content.split("\n", 1)[0].strip()
-        return self.next_steps[current_step]()
+        self.current_step = self.page_content.split("\n", 1)[0].strip()
+        return self.next_steps[self.current_step]()
 
     def refine_project_requirements(self):
         project_description = extract_section_content(
             self.page_content, "#### Project Description"
         )
+        project_type = extract_section_content(self.page_content, "#### Project Type")
+        creative_agents_config = extract_code(
+            extract_section_content(self.page_content, "#### Creative Feedback Agents")
+        )
+
+        grounding_config = extract_code(
+            extract_section_content(self.page_content, "#### Grounding")
+        )
+        if grounding_config:
+            grounding_config = json.loads(grounding_config)
+
+        if creative_agents_config:
+            creative_agents_config = json.loads(creative_agents_config)
+            redis = AgentsRedisCache()
+            creative_agents = [
+                redis.get_agent(a) for a in creative_agents_config.get("agents", [])
+            ]
+            n_rounds = creative_agents_config.get("rounds", 3)
+            agents_str = (
+                ", ".join([a.name for a in creative_agents[:-1]])
+                + " and "
+                + creative_agents[-1].name
+            )
+            comment_id = self.client.create_comment(
+                f"🚀<strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
+                page_id=self.wiki_context.page_id,
+            )
+            comments = project_requirements_brainstorming(
+                agent_contexts=creative_agents,
+                wiki_context=WikiContextInfo(
+                    page_id=self.wiki_context.page_id, local_comment_id=comment_id
+                ),
+                project_description=project_description,
+                project_type=project_type,
+                rounds=n_rounds,
+            )
+            brainstorming_summary = comments[0].comment
+            self.client.create_comment(
+                brainstorming_summary,
+                page_id=self.wiki_context.page_id,
+                parent_id=comment_id,
+            )
+
         tape = ProjectPlannerTape(
             steps=[
                 ProjectMetadata(
                     name=self.wiki_context.project_name,
                     project_id=self.wiki_context.project_id,
+                    type=project_type,
                     initial_project_description=project_description,
                 )
             ]
         )
+        nodes = [
+            ProjectPlannerNode(
+                name="requirements_refinement",
+                guidance=PromptRegistry.project_requirements_refinement,
+                allowed_steps=project_requirements_refinement_steps,
+                next_node="final_requirements_refinement",
+            )
+        ]
+        if creative_agents_config:
+            nodes.append(
+                ProjectPlannerNode(
+                    name="brainstorming_result_incorporation",
+                    guidance=PromptRegistry.brainstorming_incorporation.format(
+                        brainstorming_summary=brainstorming_summary
+                    ),
+                    allowed_steps=project_requirements_refinement_steps,
+                    next_node="final_requirements_refinement",
+                )
+            )
+            nodes[0].next_node = "brainstorming_result_incorporation"
+        nodes.append(
+            ProjectPlannerNode(
+                name="final_requirements_refinement",
+                guidance=PromptRegistry.final_requirements_refinement,
+                allowed_steps=project_requirements_refinement_steps,
+                next_node="final_requirements_refinement",
+            )
+        )
         agent = Agent.create(
             llm,
-            nodes=[
-                ProjectPlannerNode(
-                    name="requirements_refinement",
-                    guidance=PromptRegistry.project_requirements_refinement,
-                    allowed_steps=project_requirements_refinement_steps,
-                    next_node="requirements_refinement",
-                )
-            ],
+            nodes=nodes,
         )
         for event in main_loop(agent, tape, self.env):
             if ae := event.agent_event:
-                if isinstance(ae.step, RefineProjectRequirementsThought):
+                if isinstance(ae.step, FinalRefineProjectRequirementsThought):
                     tape = ae.partial_tape
                     break
-        assert isinstance(tape[-1], RefineProjectRequirementsThought)
+        assert isinstance(tape[-1], FinalRefineProjectRequirementsThought)
         key_components = "\n".join(f"- {item}" for item in tape[-1].key_components)
-        new_content = PROJECT_REQUIREMENTS_STEP_2.format(
+        new_content = STEP_2.format(
             project_description=tape[-1].refined_description,
             key_components=key_components,
         )
         self.client.update_page(page_id=self.page["id"], markdown=new_content)
 
         save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_2_COMMENT
+        return STEP_2_COMMENT
 
     def suggest_output_structure(self):
         tape = get_project_requirements_tape(wiki_context=self.wiki_context)
@@ -158,12 +234,12 @@ class ProjectRequirementsWizard:
         detailed_structure = (
             f"```json\n{json.dumps(tape[-1].detailed_structure, indent=2)}\n```"
         )
-        new_content = PROJECT_REQUIREMENTS_STEP_3.format(
+        new_content = STEP_3.format(
             simple_structure=simple_structure, detailed_structure=detailed_structure
         )
         self.client.update_page(page_id=self.page["id"], markdown=new_content)
         save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_3_COMMENT
+        return STEP_3_COMMENT
 
     def suggest_agents(self):
         tape = get_project_requirements_tape(wiki_context=self.wiki_context)
@@ -205,13 +281,10 @@ class ProjectRequirementsWizard:
         selected_agents = (
             f"```json\n{json.dumps(tape[-1].selected_agents, indent=2)}\n```"
         )
-        missing_roles = f"```json\n{json.dumps(tape[-1].missing_roles, indent=2)}\n```"
-        new_content = PROJECT_REQUIREMENTS_STEP_4.format(
-            selected_agents=selected_agents, missing_roles=missing_roles
-        )
+        new_content = STEP_4.format(selected_agents=selected_agents)
         self.client.update_page(page_id=self.page["id"], markdown=new_content)
         save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
-        return PROJECT_REQUIREMENTS_STEP_4_COMMENT
+        return STEP_4_COMMENT
 
 
 def react_to_comment(wiki_context: WikiContextInfo, comment: str):

@@ -20,7 +20,9 @@ class ProjectContextInfo(BaseModel):
 
 
 class WikiContextInfo(BaseModel):
-    type: Literal["page_created", "comment_created", "project_created"]
+    type: Literal[
+        "page_created", "comment_created", "project_created", "other"
+    ] = "other"
     user_id: Optional[int] = None
     project_id: Optional[int] = None
     project_name: Optional[str] = None

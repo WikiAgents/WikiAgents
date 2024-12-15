@@ -1,5 +1,5 @@
 ##### Description
-A simple agent that uses its' immediate output to accomplish tasks. Supports custom system prompts but no tools. For demonstration purpose.
+A simple agent that uses its' immediate output to accomplish tasks. Supports custom system prompts but no tools. Always responds in a hilarious way.
 
 ---
 

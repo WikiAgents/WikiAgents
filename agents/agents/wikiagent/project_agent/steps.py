@@ -18,6 +18,9 @@ class ProjectMetadata(Observation):
     kind: Literal["project_metadata"] = "project_metadata"
     project_id: int = Field(description="The id of the project")
     name: str = Field(description="The name of the project")
+    type: str = Field(
+        description="The type of the project. E.g. Topic Compendium, Research, Code"
+    )
     initial_project_description: str = Field(
         description="The initial project description provided by the user."
     )
@@ -30,6 +33,16 @@ class RefineProjectRequirementsThought(WikiAgentsThought):
     )
     refined_description: str = Field(
         description="A refined version of the users' initial project description"
+    )
+
+
+class FinalRefineProjectRequirementsThought(WikiAgentsThought):
+    kind: Literal["final_requirements_refinement"] = "final_requirements_refinement"
+    key_components: List[str] = Field(
+        description="The key components and subtopics of the project. Must be high quality!"
+    )
+    refined_description: str = Field(
+        description="The final version of the project description. Must be high quality!"
     )
 
 
@@ -63,16 +76,18 @@ class AgentSelectionThought(WikiAgentsThought):
     selected_agents: List[dict] = Field(
         description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'page_id': <agent_page_id>, 'parameters': <agent_parameters_adjusted_to_project>}]"
     )
-    missing_roles: List[dict] = Field(
-        default=[],
-        description="The list of agents that could be beneficial for generating this project. Must be in the form of: [{'description': <agent_description>, 'why': <arguments_why_the_agent_is_needed>}]",
-    )
+
+
+# class CreativeAgentsBrainstormSummary(WikiAgentsObservation):
+#     kind: Literal['brainstorm_summary'] = "brainstorm_summary"
+#     content: str
 
 
 ProjectPlannerAgentTapeStep = (
     Union[
         ProjectMetadata,
         RefineProjectRequirementsThought,
+        FinalRefineProjectRequirementsThought,
         OutputStructureSuggestionThought,
         GetAvailableAgentsAction,
         AvailableAgentsObservation,
@@ -86,6 +101,7 @@ ProjectPlannerAgentStep: TypeAlias = Annotated[
     Union[
         ProjectMetadata,
         RefineProjectRequirementsThought,
+        FinalRefineProjectRequirementsThought,
         OutputStructureSuggestionThought,
         GetAvailableAgentsAction,
         AvailableAgentsObservation,
@@ -98,7 +114,7 @@ ProjectPlannerAgentStep: TypeAlias = Annotated[
 
 project_requirements_refinement_steps = get_step_schemas_from_union_type(
     Annotated[
-        Union[RefineProjectRequirementsThought],
+        Union[RefineProjectRequirementsThought, FinalRefineProjectRequirementsThought],
         Field(discriminator="kind"),
     ]
 )

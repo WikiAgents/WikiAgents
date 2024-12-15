@@ -155,7 +155,7 @@ Check out the [User Guide](docs/user_guide.md)
 
 - This project is provided **"as is"** without any warranty of any kind, either express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, or non-infringement.
 - The author is not responsible for any costs associated with the use of APIs or other external services integrated into this project.
-- All **LLM agent personas** in this project are entirely **fictional** and have no relation to any real-world individuals, entities, or organizations. Any resemblance to actual persons, living or dead, is purely coincidental.
+- All **LLM agent personas** in this project are entirely **fictional** and have no relation to any real-world individuals, entities, or organizations. Any resemblance to actual persons is purely coincidental.
 
 
 ## Known Limitations

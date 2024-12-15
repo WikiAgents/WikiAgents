@@ -539,4 +539,10 @@ class AgentBookStackClient(BookStackAPIClient):
         token_id, token_secret = redis.hmget(
             f"agent:{agent_name}", ["token_id", "token_secret"]
         )
-        super().__init__("http://bookstack", token_id.decode(), token_secret.decode())
+        try:
+            super().__init__(
+                "http://bookstack", token_id.decode(), token_secret.decode()
+            )
+        except:
+            print("agent:", agent_name)
+            raise

@@ -19,82 +19,100 @@ PROJECT_REQUIREMENTS_STEP_1 = """### Step 1/4
 
 ---
 
-*Write a `/next` comment to proceed.*   
-*Edit the page if you want to make changes.*    
-*Next step: Project Description Refinement*      
-"""
-
-PROJECT_REQUIREMENTS_STEP_2 = """### Step 2/4
-#### Project Description
-{project_description}
+#### Project Type
+Topic Compendium
 
 ---
 
-#### Key Components
-{key_components}
+#### Creative Feedback Agents
+{configured_creatives}
+
+Available Creative Feedback Agents:
+{available_creatives}
 
 ---
 
-*Write a `/next` comment to proceed.*   
-*Edit the page if you want to make changes.*    
-*Next step: Agent Selection*    
-"""
-
-PROJECT_REQUIREMENTS_STEP_2_COMMENT = "🚀 The Project Description Refinement step has been completed. Please review the refinement and feel free to edit the page to your liking. To proceed to the next step, comment <strong>/next</strong>."
-
-PROJECT_REQUIREMENTS_STEP_3 = """### Step 3/4
-#### Output Structure
-
-##### Simple
-{simple_structure}
+#### Grounding
+{grounding}
 
 ---
 
-##### Detailed
-{detailed_structure}
-
----
-
-
-*Edit the output structure to your liking and  write `/next simple` or `/next detailed` in the comments to proceed.*
-"""
-
-PROJECT_REQUIREMENTS_STEP_3_COMMENT = "🚀 You have completed the Output Structure Suggestion step. Please review and edit the structure to fit your needs, and choose between a simple or a detailed structure. You can proceed to the next step by commenting <strong>/next simple</strong> for a simple structure or <strong>/next detailed</strong> for a detailed structure."
-
-PROJECT_REQUIREMENTS_STEP_4 = """### Step 4/4
-#### Chosen Agents
-{selected_agents}
-
----
-
-#### Agent Hiring Suggestions
-{missing_roles}
-
----
 
 *Write a `/next` comment to proceed.*   
 *Edit the page if you want to make changes.*    
+*Next step: Brainstorming & Project Description Refinement*      
 """
 
-PROJECT_REQUIREMENTS_STEP_4_COMMENT = "🚀 I have selected some agents for the project, please review and edit to your liking. Type <strong>/next</strong> to start to generation!"
+
+# PROJECT_REQUIREMENTS_STEP_1 = """### Step 1/4
+
+# #### Project Description
+# {project_description}            # self.redis.hset(
+#     f"agent:{agent.name}:tools",
+#     mapping={k: json.dumps(v) for k, v in tools.items()},
+# )
+
+# ---
+
+# *Write a `/next` comment to proceed.*
+# *Edit the page if you want to make changes.*
+# *Next step: Project Description Refinement*
+# """
+
+# PROJECT_REQUIREMENTS_STEP_2 = """### Step 2/4
+# #### Project Description
+# {project_description}
+
+# ---
+
+# #### Key Components
+# {key_components}
+
+# ---
+
+# *Write a `/next` comment to proceed.*
+# *Edit the page if you want to make changes.*
+# *Next step: Agent Selection*
+# """
+
+# PROJECT_REQUIREMENTS_STEP_2_COMMENT = "🚀 The Project Description Refinement step has been completed. Please review the refinement and feel free to edit the page to your liking. To proceed to the next step, comment <strong>/next</strong>."
+
+# PROJECT_REQUIREMENTS_STEP_3 = """### Step 3/4
+# #### Output Structure
+
+# ##### Simple
+# {simple_structure}
+
+# ---
+
+# ##### Detailed
+# {detailed_structure}
+
+# ---
 
 
-PROJECT_REQUIREMENTS_PAGE_MARKDOWN = """
-### Task Description
-{task_description}
+# *Edit the output structure to your liking and  write `/next simple` or `/next detailed` in the comments to proceed.*
+# """
 
----
+# PROJECT_REQUIREMENTS_STEP_3_COMMENT = "🚀 You have completed the Output Structure Suggestion step. Please review and edit the structure to fit your needs, and choose between a simple or a detailed structure. You can proceed to the next step by commenting <strong>/next simple</strong> for a simple structure or <strong>/next detailed</strong> for a detailed structure."
 
-### Project type
-e.g. Knowledge Base, Code, Project Management
+# PROJECT_REQUIREMENTS_STEP_4 = """### Step 4/4
+# #### Chosen Agents
+# {selected_agents}
 
----
+# ---
 
-### Assigned Agents
+# #### Agent Hiring Suggestions
+# {missing_roles}
 
+# ---
 
----
-"""
+# *Write a `/next` comment to proceed.*
+# *Edit the page if you want to make changes.*
+# """
+
+# PROJECT_REQUIREMENTS_STEP_4_COMMENT = "🚀 I have selected some agents for the project, please review and edit to your liking. Type <strong>/next</strong> to start to generation!"
+
 
 PROJECT_AGENTS_CHAPTER_NAME = "✨ Involved Agents"
 PROJECT_AGENTS_CHAPTER_DESCRIPTION = (

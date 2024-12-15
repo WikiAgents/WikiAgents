@@ -12,6 +12,7 @@ from shared.constants import (
     TOOL_CREATE_COMMENT,
     TOOL_FAILED_COMMENT,
     TOOL_UPDATE_COMMENT,
+    PROJECT_REQUIREMENTS_PAGE_NAME,
 )
 
 CONTENT_TASK_AGENTS_BOOK_ID = 1
@@ -120,6 +121,17 @@ class PageEventHandler(BaseEventHandler):
                     )
             else:
                 self.client.create_comment(TOOL_FAILED_COMMENT, page_id=page["id"])
+
+        elif event.related_item.name == PROJECT_REQUIREMENTS_PAGE_NAME:
+            page = self.client.get_page(event.related_item.id)
+            if page["markdown"].startswith("### Step 1/4"):
+                pass
+            elif page["markdown"].startswith("### Step 2/4"):
+                pass
+            elif page["markdown"].startswith("### Step 3/4"):
+                pass
+            elif page["markdown"].startswith("### Step 4/4"):
+                pass
 
     def handle_page_delete(self, event: BookStackWebhookPayload):
         if event.related_item.book_id in [
