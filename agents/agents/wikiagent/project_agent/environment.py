@@ -10,6 +10,7 @@ from tapeagents.environment import Environment
 from tapeagents.utils import FatalError
 
 from shared.agents_redis_cache import AgentsRedisCache
+from shared.tools_redis_cache import ToolsRedisCache
 from shared.bookstack_client import AgentBookStackClient
 from shared.models import AgentType
 from agents.base.environment import WikiAgentsEnvironment
@@ -30,12 +31,25 @@ class ProjectPlannerEnvironment(WikiAgentsEnvironment):
             try:
                 match action:
                     case GetAvailableAgentsAction():
+                        agents = AgentsRedisCache().get_agents_by_type("content_agent")
                         agents = [
-                            a.model_dump(exclude_none=True)
-                            for a in AgentsRedisCache().get_all_agents()
-                            if a.type == "content_agent"
+                            {
+                                "name": a.name,
+                                "page_id": a.page_id,
+                                "description": a.description,
+                                "parameters": a.parameters,
+                                "tools": a.tools,
+                            }
+                            for a in agents
                         ]
                         tape = tape.append(AvailableAgentsObservation(agents=agents))
+                    case GetTools():
+                        tools = ToolsRedisCache().get_all_tools()
+                        tools = [
+                            {"name": t.name, "description": t.description}
+                            for t in tools
+                        ]
+                        tape = tape.append(AllToolsObservation(tools=tools))
 
             except FatalError:
                 raise

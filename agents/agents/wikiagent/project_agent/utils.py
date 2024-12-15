@@ -74,3 +74,10 @@ def save_project_requirements_tape(
                     "Tape", uploaded_to=wiki_context.page_id, link=f"/link/{page['id']}"
                 )
             break
+
+
+def update_tape_step(wiki_context: WikiContextInfo, step_index: int, update: dict):
+    tape = get_project_requirements_tape(wiki_context)
+    for k, v in update.items():
+        setattr(tape[step_index], k, v)
+    save_project_requirements_tape(wiki_context, tape)

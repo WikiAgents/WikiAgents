@@ -18,6 +18,7 @@ from agents.wikiagent.project_agent.steps import (
     agent_selection_plan_steps,
     ProjectPlannerAgentTapeStep,
     FinalRefineProjectRequirementsThought,
+    AgentInstancesThought,
 )
 from agents.wikiagent.project_agent.tape import ProjectPlannerTape
 from pydantic import Field
@@ -116,37 +117,39 @@ class ProjectRequirementsWizard:
         if grounding_config:
             grounding_config = json.loads(grounding_config)
 
+        brainstorming_summary = None
         if creative_agents_config:
             creative_agents_config = json.loads(creative_agents_config)
-            redis = AgentsRedisCache()
-            creative_agents = [
-                redis.get_agent(a) for a in creative_agents_config.get("agents", [])
-            ]
-            n_rounds = creative_agents_config.get("rounds", 3)
-            agents_str = (
-                ", ".join([a.name for a in creative_agents[:-1]])
-                + " and "
-                + creative_agents[-1].name
-            )
-            comment_id = self.client.create_comment(
-                f"🚀<strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
-                page_id=self.wiki_context.page_id,
-            )
-            comments = project_requirements_brainstorming(
-                agent_contexts=creative_agents,
-                wiki_context=WikiContextInfo(
-                    page_id=self.wiki_context.page_id, local_comment_id=comment_id
-                ),
-                project_description=project_description,
-                project_type=project_type,
-                rounds=n_rounds,
-            )
-            brainstorming_summary = comments[0].comment
-            self.client.create_comment(
-                brainstorming_summary,
-                page_id=self.wiki_context.page_id,
-                parent_id=comment_id,
-            )
+            if len(creative_agents_config.get("agents", [])) > 0:
+                redis = AgentsRedisCache()
+                creative_agents = [
+                    redis.get_agent(a) for a in creative_agents_config.get("agents", [])
+                ]
+                n_rounds = creative_agents_config.get("rounds", 3)
+                agents_str = (
+                    ", ".join([a.name for a in creative_agents[:-1]])
+                    + " and "
+                    + creative_agents[-1].name
+                )
+                comment_id = self.client.create_comment(
+                    f"🚀<strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
+                    page_id=self.wiki_context.page_id,
+                )
+                comments = project_requirements_brainstorming(
+                    agent_contexts=creative_agents,
+                    wiki_context=WikiContextInfo(
+                        page_id=self.wiki_context.page_id, local_comment_id=comment_id
+                    ),
+                    project_description=project_description,
+                    project_type=project_type,
+                    rounds=n_rounds,
+                )
+                brainstorming_summary = comments[0].comment
+                self.client.create_comment(
+                    brainstorming_summary,
+                    page_id=self.wiki_context.page_id,
+                    parent_id=comment_id,
+                )
 
         tape = ProjectPlannerTape(
             steps=[
@@ -166,7 +169,7 @@ class ProjectRequirementsWizard:
                 next_node="final_requirements_refinement",
             )
         ]
-        if creative_agents_config:
+        if brainstorming_summary:
             nodes.append(
                 ProjectPlannerNode(
                     name="brainstorming_result_incorporation",
@@ -196,7 +199,10 @@ class ProjectRequirementsWizard:
                     tape = ae.partial_tape
                     break
         assert isinstance(tape[-1], FinalRefineProjectRequirementsThought)
-        key_components = "\n".join(f"- {item}" for item in tape[-1].key_components)
+        key_components = (
+            f"```json\n{json.dumps(tape[-1].key_components, indent=2)}\n```"
+        )
+        # key_components = "\n".join(f"- {item}" for item in tape[-1].key_components)
         new_content = STEP_2.format(
             project_description=tape[-1].refined_description,
             key_components=key_components,
@@ -250,7 +256,9 @@ class ProjectRequirementsWizard:
             return "💥 Invalid command! Try <b>/next simple</b> or <b>/next detailed</b>"
         # TODO remove other structure from tape?
         tape = tape.append(
-            UserStep(content=f"The user has selected the {structure_type} structure.")
+            UserStep(
+                content=f"The user has selected the {structure_type} structure. Forget the {'simple' if structure_type == 'detailed' else 'detailed'} structure!"
+            )
         )
         tape = tape.append(SetNextNode(next_node="agents_selector"))
         agent = Agent.create(
@@ -268,20 +276,28 @@ class ProjectRequirementsWizard:
                     system_prompt=PromptRegistry.select_agents,
                     guidance=PromptRegistry.select_agents,
                     allowed_steps=agent_selection_steps,
-                    next_node="agents_selector",
+                    next_node="agents_selector_plan",
                 ),
             ],
         )
-        for event in main_loop(agent, tape, self.env):
+        agent_selection_step = None
+        agent_instances_step = None
+        for event in main_loop(agent, tape, self.env, max_loops=10):
             if ae := event.agent_event:
                 if isinstance(ae.step, AgentSelectionThought):
+                    agent_selection_step = ae.step
+                elif isinstance(ae.step, AgentInstancesThought):
                     tape = ae.partial_tape
+                    agent_instances_step = ae.step
                     break
-        assert isinstance(tape[-1], AgentSelectionThought)
-        selected_agents = (
-            f"```json\n{json.dumps(tape[-1].selected_agents, indent=2)}\n```"
+        assert agent_selection_step is not None
+        assert agent_instances_step is not None
+
+        selected_agents = f"```json\n{json.dumps(agent_selection_step.selected_agents, indent=2)}\n```"
+        agent_instances = f"```json\n{json.dumps(agent_instances_step.agent_instances, indent=2)}\n```"
+        new_content = STEP_4.format(
+            selected_agents=selected_agents, agent_instances=agent_instances
         )
-        new_content = STEP_4.format(selected_agents=selected_agents)
         self.client.update_page(page_id=self.page["id"], markdown=new_content)
         save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
         return STEP_4_COMMENT

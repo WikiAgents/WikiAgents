@@ -14,6 +14,10 @@ from shared.constants import (
     TOOL_UPDATE_COMMENT,
     PROJECT_REQUIREMENTS_PAGE_NAME,
 )
+from shared.utils import get_project_metadata_for_page
+from shared.models import WikiContextInfo, ProjectContextInfo
+from shared.utils import extract_section_content, extract_code
+import json
 
 CONTENT_TASK_AGENTS_BOOK_ID = 1
 TOOLS_BOOK_ID = 2
@@ -127,9 +131,66 @@ class PageEventHandler(BaseEventHandler):
             if page["markdown"].startswith("### Step 1/4"):
                 pass
             elif page["markdown"].startswith("### Step 2/4"):
-                pass
+                project_description = extract_section_content(
+                    page["markdown"], "#### Project Description"
+                )
+                key_components = extract_code(
+                    extract_section_content(page["markdown"], "#### Key Components")
+                )
+                if key_components:
+                    key_components = json.loads(key_components)
+                else:
+                    key_components = []
+                updated_step_attributes = {
+                    "refined_description": project_description,
+                    "key_components": key_components,
+                }
+                project_meta = get_project_metadata_for_page(page["id"])
+                self.agents_queue.enqueue(
+                    "agents.wikiagent.project_agent.utils.update_tape_step",
+                    kwargs={
+                        "wiki_context": WikiContextInfo(
+                            page_id=page["id"],
+                            project_id=project_meta["project_id"],
+                            project_context=ProjectContextInfo(
+                                tapes_chapter_id=project_meta["tapes"]["chapter_id"]
+                            ),
+                        ),
+                        "step_index": -1,
+                        "update": updated_step_attributes,
+                    },
+                )
+
             elif page["markdown"].startswith("### Step 3/4"):
-                pass
+                simple = extract_code(
+                    extract_section_content(page["markdown"], "##### Simple")
+                )
+                if simple:
+                    simple = json.loads(simple)
+                detailed = extract_code(
+                    extract_section_content(page["markdown"], "##### Detailed")
+                )
+                if detailed:
+                    detailed = json.loads(detailed)
+                updated_step_attributes = {
+                    "simple_structure": simple,
+                    "detailed_structure": detailed,
+                }
+                project_meta = get_project_metadata_for_page(page["id"])
+                self.agents_queue.enqueue(
+                    "agents.wikiagent.project_agent.utils.update_tape_step",
+                    kwargs={
+                        "wiki_context": WikiContextInfo(
+                            page_id=page["id"],
+                            project_id=project_meta["project_id"],
+                            project_context=ProjectContextInfo(
+                                tapes_chapter_id=project_meta["tapes"]["chapter_id"]
+                            ),
+                        ),
+                        "step_index": -1,
+                        "update": updated_step_attributes,
+                    },
+                )
             elif page["markdown"].startswith("### Step 4/4"):
                 pass
 

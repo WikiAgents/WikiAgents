@@ -74,13 +74,28 @@ class AvailableAgentsObservation(WikiAgentsObservation):
 class AgentSelectionThought(WikiAgentsThought):
     kind: Literal["agent_selection_thought"] = "agent_selection_thought"
     selected_agents: List[dict] = Field(
-        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'page_id': <agent_page_id>, 'parameters': <agent_parameters_adjusted_to_project>}]"
+        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'agent_id': <agent_page_id>, 'reason': <why_the_agent_was_chosen>}]"
     )
 
 
-# class CreativeAgentsBrainstormSummary(WikiAgentsObservation):
-#     kind: Literal['brainstorm_summary'] = "brainstorm_summary"
-#     content: str
+class GetTools(WikiAgentsAction):
+    """
+    Action that returns all available tools.
+    """
+
+    kind: Literal["get_all_tools"] = "get_all_tools"
+
+
+class AllToolsObservation(WikiAgentsObservation):
+    kind: Literal["all_tools_observation"] = "all_tools_observation"
+    tools: List[dict]
+
+
+class AgentInstancesThought(WikiAgentsThought):
+    kind: Literal["agent_instances_thought"] = "agent_instances_thought"
+    agent_instances: List[dict] = Field(
+        description="The list of agent instances. Must be in the form of: [{'name': <unique_agent_name>, 'agent_id': <agent_page_id>, 'description': <agent_description>, 'parameters': <customized_parameters>, 'tools': <list_of_tool_names>}]"
+    )
 
 
 ProjectPlannerAgentTapeStep = (
@@ -92,22 +107,16 @@ ProjectPlannerAgentTapeStep = (
         GetAvailableAgentsAction,
         AvailableAgentsObservation,
         AgentSelectionThought,
+        GetTools,
+        AllToolsObservation,
+        AgentInstancesThought,
     ]
     | WikiAgentsTapeStep
 )
 
 
 ProjectPlannerAgentStep: TypeAlias = Annotated[
-    Union[
-        ProjectMetadata,
-        RefineProjectRequirementsThought,
-        FinalRefineProjectRequirementsThought,
-        OutputStructureSuggestionThought,
-        GetAvailableAgentsAction,
-        AvailableAgentsObservation,
-        AgentSelectionThought,
-    ]
-    | WikiAgentsTapeStep,
+    ProjectPlannerAgentTapeStep,
     Field(discriminator="kind"),
 ]
 
@@ -134,7 +143,9 @@ agent_selection_plan_steps = get_step_schemas_from_union_type(
 
 agent_selection_steps = get_step_schemas_from_union_type(
     Annotated[
-        Union[AgentSelectionThought],
+        Union[
+            AgentSelectionThought, GetTools, AllToolsObservation, AgentInstancesThought
+        ],
         Field(discriminator="kind"),
     ]
 )

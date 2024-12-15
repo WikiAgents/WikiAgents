@@ -31,8 +31,13 @@ STEP_3 = """### Step 3/4
 """
 
 STEP_4 = """### Step 4/4
-#### Chosen Agents
+#### Selected Agents
 {selected_agents}
+
+---
+
+#### Agent Instances
+{agent_instances}
 
 ---
 

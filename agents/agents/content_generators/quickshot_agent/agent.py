@@ -66,7 +66,9 @@ class QuickShotAgent(WikiAgentBase):
             nodes=[
                 QuickShotNode(
                     name="quickshot",
-                    system_prompt=agent_context.parameters.get("sytem_prompt", ""),
+                    system_prompt=agent_context.parameters.get(
+                        "additional_system_prompt", ""
+                    ),
                     guidance="Respond to the users' request",
                     allowed_steps=allowed_steps,
                     next_node="quickshot",

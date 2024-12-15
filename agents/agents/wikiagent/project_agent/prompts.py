@@ -87,7 +87,9 @@ Guidelines:
    - Organize related subtopics as Chapters within each Book.
    - Use Pages for specific deliverables, explanations, or fine-grained content within each Chapter.
 
-Your suggestions should ensure logical flow, coherence, and comprehensiveness while reflecting the projects' key components.
+
+The output structure must cover ONLY `key_components` from the `final_requirements_refinement`! Use the key components as outer containers (e.g. as book or as chapter) and structure the details of the component into pages.
+DO NOT INCLUDE COMPONENTS OTHER THAN THOSE IN `final_requirements_refinement`! Ignore the key components of previous refinements!
 
 Respond with kind="project_output_structure_suggestion"
 
@@ -96,11 +98,11 @@ Here is an example of the expected structure schema for the simple_structure and
    "book1_name":
    {
       "chapter1_name": {
-         "page1_name": "short page description",
-         "page2_name": "short page description"
+         "page1_name": "short description of what the page contains",
+         "page2_name": "short description of what the page contains"
       },
       "chapter2_name": {
-         "page1_name": "short page description"
+         "page1_name": "short description of what the page contains"
       },      
    }
 }
@@ -110,18 +112,23 @@ Here is an example of the expected structure schema for the simple_structure and
 )
 
 
-SELECT_AGENTS = f"""
-Your task is to select agents from the available agents in the system, suited for generating the project. You should suggest adjusted parameters for the selected agents aswell. Only suggest adjustments for parameter that are already defined in the agent! Follow these steps:
+SELECT_AGENTS = (
+    f"""
+Your task is to select agents from the available agents in the system, suited for generating the project. Follow these steps:
 
 1. Retrieve Available Agents: Use the tool get_available_agents to list all available agents and their capabilities. Respond with kind="get_available_agents"
 
 2. Analyze Project Needs: Review the refined_description and key_components in the final_requirements_refinement to identify the roles and skills required for successful content generation.
 
-3. Select Agents: Match the available agents to the required roles based on their capabilities. Choose the most fitting agents for each role and recommend adjusted parameters for this agent. Only suggest parameter changes for parameters that are already defined! You can instanciate the same agent (same name and page_id) with adjusted parameters multiple times! Respond with kind="agent_selection_thought"
+3. Select Agents: Match the available agents to the required roles based on their capabilities. Output the agent names and give a reason why the agent was selected. Respond with kind="agent_selection_thought"
+
+4. Retrieve Tools: Use the tool get_all_tools to list all available tools. You can assign tools to agents in the next step. Respond with kind="get_all_tools"
+
+4. Define Agent Instances: Create instances of your selected agents (max. 8 agent instances). Each selected agent can be instantiated multiple times with adjusted configurations. For each agent instance, provide a unique_name, the agent_id of the original agent, description, parameters and tools. Only adjust parameters that are already defined in the original agent (if the original exposes a parameter, it means that you are encouraged to adjust the value of the parameter)! If a parameter name contains 'system_prompt' or 'additional_system_prompt' it means you can adjust the persona of the agent, be specific and create highly skilled, top notch personas (e.g. 'You are a high-skilled expert in the domain of ...'). The description must be in alignment with the configured parameters (e.g. adjusted prompt) and tools! Respond with kind="agent_instances_thought"
 
 """
-# Respond with kind="agent_selection_thought"
-# {short_format_instruction}
+    + short_format_instruction
+)
 
 
 class PromptRegistry:
