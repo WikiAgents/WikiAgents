@@ -41,7 +41,10 @@ class ToolsRedisCache:
 
     def get_tool(self, name: str):
         tool = self.redis.hgetall(f"tool:{name}")
-        tool["parameters"] = json.loads(tool["parameters"])
+        if tool:
+            tool["parameters"] = json.loads(tool.get("parameters", {}))
+        else:
+            return
         return UserdefinedTool(**tool)
 
     def delete_tool(self, name: str):
@@ -87,13 +90,11 @@ class ToolParser:
         raise ValueError("No function definition found in the provided code.")
 
     def extract_spec(self, tool_code: str):
-        local_namespace = {}
-        exec(tool_code, {}, local_namespace)
-        if self.function_name not in local_namespace:
-            raise ValueError(
-                f"Function '{self.function_name}' not found in the provided code."
-            )
-        func = local_namespace[self.function_name]
+        from tools.rate_limiter import rate_limiter
+
+        globals()["rate_limiter"] = rate_limiter
+        exec(tool_code, globals())
+        func = globals()[self.function_name]
         return self.generate_function_spec(func)
 
     def generate_function_spec(self, func):
@@ -147,16 +148,3 @@ class ToolParser:
                 }
         spec_str = json.dumps(spec_dict, indent=4)
         return func, spec_dict, spec_str
-
-    def run(self, *args, **kwargs):
-        """
-        Executes the function stored in the class with the given arguments.
-
-        Args:
-            *args: Positional arguments for the function.
-            **kwargs: Keyword arguments for the function.
-
-        Returns:
-            Any: The result of the function execution.
-        """
-        return self.function(*args, **kwargs)

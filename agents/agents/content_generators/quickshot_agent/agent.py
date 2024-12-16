@@ -22,6 +22,7 @@ from typing import Annotated, List, Literal, Optional, TypeAlias, Union
 from tapeagents.dialog_tape import AssistantStep, UserStep
 from shared.constants import DEFAULT_LLM
 from shared.utils import get_llm
+from shared.bookstack_client import AgentBookStackClient
 
 
 ALLOWED_STEPS = """
@@ -52,6 +53,10 @@ class QuickShotAgent(WikiAgentBase):
         wiki_context: WikiContextInfo | dict,
         instructions: str,
     ) -> str:
+        if isinstance(agent_context, dict):
+            agent_context = RedisAgent(**agent_context)
+        if isinstance(wiki_context, dict):
+            wiki_context = WikiContextInfo(**wiki_context)
         llm = get_llm(agent_context)
         env = WikiAgentsEnvironment("Quick Shot Agent")
         tape = WikiAgentsTape(
@@ -69,7 +74,7 @@ class QuickShotAgent(WikiAgentBase):
                     system_prompt=agent_context.parameters.get(
                         "additional_system_prompt", ""
                     ),
-                    guidance="Respond to the users' request",
+                    guidance="Respond to the users' request in well-structured markdown. kind='assistant'",
                     allowed_steps=allowed_steps,
                     next_node="quickshot",
                 ),
@@ -79,5 +84,10 @@ class QuickShotAgent(WikiAgentBase):
             if ae := event.agent_event:
                 if isinstance(ae.step, AssistantStep):
                     tape = ae.partial_tape
+                    output = ae.step.content
                     break
-        return tape
+        assert output is not None
+        client = AgentBookStackClient(agent_context.name)
+        client.update_page(page_id=wiki_context.page_id, markdown=output)
+        return output
+        # return tape

@@ -13,7 +13,7 @@ An agent that uses Chain of Thought reasoning. Has Wikipedia access.
 ##### Parameters
 ```json
 {
-  "additional_system_prompt": "",
+  "system_prompt": "",
   "llm_temperature": 0.1
 }
 ```
@@ -21,6 +21,7 @@ An agent that uses Chain of Thought reasoning. Has Wikipedia access.
 
 ##### Tools
 ```json
-["Wikipedia Search", "Wikipedia Summary"]
+[]
 ```
 ---
+

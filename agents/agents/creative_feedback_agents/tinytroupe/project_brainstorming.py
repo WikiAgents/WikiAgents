@@ -20,7 +20,7 @@ from agents.base.steps import CommentResponse
 # Take your time to think deeply and collaborate creatively. Let’s uncover all the essential aspects of this topic together!
 # """
 
-PRB_PROMPT = """You're part of a collaborative wiki-like system where we create textual projects together. Take a moment to think carefully about this project. 
+PRB_PROMPT = """You're part of a collaborative wiki-like system where we create textual projects together. Take a moment to think about this project. 
 
 Project Type:
 {project_type}
@@ -34,6 +34,7 @@ Focus on:
 1. What the project is about.
 2. Its key components or areas to explore.
 3. Any gaps or questions that might need addressing.
+4. Talk to the others!
 
 Once you've thought it through, start talking! Share your ideas, ask questions, and build on what others say. Let's turn these thoughts into a lively, productive discussion! When you respond to someone, always include a new aspect!
 """

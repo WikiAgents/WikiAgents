@@ -29,6 +29,8 @@ from agents.base.environment import WikiAgentsEnvironment
 from shared.constants import DEFAULT_LLM
 from shared.utils import get_llm
 from shared.tools_redis_cache import ToolsRedisCache
+from shared.bookstack_client import AgentBookStackClient
+from agents.base.utils import get_content_generation_tape, save_content_generation_tape
 
 
 class PlanActNode(WikiAgentsMonoNode[WikiAgentsTape]):
@@ -45,52 +47,60 @@ class ChainOfThoughtAgent(WikiAgentBase):
         wiki_context: WikiContextInfo | dict,
         instructions: str,
     ) -> str:
-        tools = [ToolsRedisCache().get_tool(t) for t in agent_context.tools]
-        tools = [
-            {
-                "tool_name": t.name,
-                "description": t.description,
-                "parameters": t.parameters,
-            }
-            for t in tools
-        ]
+        if isinstance(agent_context, dict):
+            agent_context = RedisAgent(**agent_context)
+        if isinstance(wiki_context, dict):
+            wiki_context = WikiContextInfo(**wiki_context)
+        tools = []
+        if agent_context.tools:
+            for tool_name in agent_context.tools:
+                tool = ToolsRedisCache().get_tool(tool_name)
+                if tool:
+                    tools.append(
+                        {
+                            "tool_name": tool.name,
+                            "description": tool.description,
+                            "parameters": tool.parameters,
+                        }
+                    )
+        else:
+            tools = "You have no access to userdefined tools!"
         llm = get_llm(agent_context)
         env = WikiAgentsEnvironment("WikiAgent")
-        tape = ChainOfThoughtAgentTape(
-            steps=[
-                UserStep(
-                    content=instructions,
-                )
-            ]
-        )
+        tape = get_content_generation_tape(wiki_context, ChainOfThoughtAgentTape)
+        if tape is None:
+            tape = ChainOfThoughtAgentTape()
+        tape = tape.append(UserStep(content=instructions))
         agent = Agent.create(
             llm,
             nodes=[
                 PlanActNode(
                     name="plan",
-                    system_prompt=PromptRegistry.plan_system_prompt.format(
-                        userdefined_tools=tools
-                    )
-                    + agent_context.parameters.get("additional_system_prompt", ""),
+                    system_prompt=agent_context.parameters.get("system_prompt", "")
+                    + PromptRegistry.plan_system_prompt.format(userdefined_tools=tools),
                     guidance=PromptRegistry.plan_guidance,
                     allowed_steps=plan_steps,
                     next_node="act",
                 ),
                 PlanActNode(
                     name="act",
-                    system_prompt=PromptRegistry.plan_system_prompt.format(
-                        userdefined_tools=tools
-                    )
-                    + agent_context.parameters.get("additional_system_prompt", ""),
+                    system_prompt=agent_context.parameters.get("system_prompt", "")
+                    + PromptRegistry.plan_system_prompt.format(userdefined_tools=tools),
                     guidance=PromptRegistry.act_guidance,
                     allowed_steps=act_steps,
                     next_node="plan",
                 ),
             ],
         )
-        for event in main_loop(agent, tape, env, max_loops=5):
+        output = None
+        for event in main_loop(agent, tape, env, max_loops=10):
             if ae := event.agent_event:
                 if isinstance(ae.step, AssistantStep):
                     tape = ae.partial_tape
+                    output = ae.step.content
                     break
-        return tape
+        assert output is not None
+        client = AgentBookStackClient(agent_context.name)
+        client.update_page(page_id=wiki_context.page_id, markdown=output)
+        save_content_generation_tape(wiki_context, tape)
+        return output

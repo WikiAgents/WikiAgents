@@ -515,7 +515,6 @@ with SessionLocal() as session:
                         parameters,
                         tools,
                     ) = parse_agent_markdown(agent["markdown"])
-                    # tools = markdown_list_to_list(extract_code(extract_section_content(agent["markdown"], "##### Tools"))) #TODO
 
                     AgentOnboarding().onboard_agent(
                         RedisAgent(
@@ -526,6 +525,7 @@ with SessionLocal() as session:
                             code_path=code_path,
                             command=command,
                             parameters=parameters,
+                            tools=tools,
                         )
                     )
 

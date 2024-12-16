@@ -183,7 +183,6 @@ class BookStackAPIClient:
         if tags is not None:
             data["tags"] = tags
         data["priority"] = 1
-        print(data)
         response = requests.post(url, headers=self.headers, json=data)
         if not response.ok:
             print(response.content)

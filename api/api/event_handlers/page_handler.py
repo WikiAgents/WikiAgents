@@ -89,6 +89,7 @@ class PageEventHandler(BaseEventHandler):
                     )
             else:
                 self.client.create_comment(TOOL_FAILED_COMMENT, page_id=page["id"])
+                # TODO generate tool
 
     def handle_page_update(self, event: BookStackWebhookPayload):
         if event.related_item.book_id in [
@@ -128,9 +129,9 @@ class PageEventHandler(BaseEventHandler):
 
         elif event.related_item.name == PROJECT_REQUIREMENTS_PAGE_NAME:
             page = self.client.get_page(event.related_item.id)
-            if page["markdown"].startswith("### Step 1/4"):
+            if page["markdown"].startswith("### Step 1/5"):
                 pass
-            elif page["markdown"].startswith("### Step 2/4"):
+            elif page["markdown"].startswith("### Step 2/5"):
                 project_description = extract_section_content(
                     page["markdown"], "#### Project Description"
                 )
@@ -161,7 +162,7 @@ class PageEventHandler(BaseEventHandler):
                     },
                 )
 
-            elif page["markdown"].startswith("### Step 3/4"):
+            elif page["markdown"].startswith("### Step 3/5"):
                 simple = extract_code(
                     extract_section_content(page["markdown"], "##### Simple")
                 )
@@ -191,8 +192,57 @@ class PageEventHandler(BaseEventHandler):
                         "update": updated_step_attributes,
                     },
                 )
-            elif page["markdown"].startswith("### Step 4/4"):
-                pass
+            elif page["markdown"].startswith("### Step 4/5"):
+                agent_instances = extract_code(
+                    extract_section_content(page["markdown"], "#### Agent Instances")
+                )
+                if agent_instances:
+                    agent_instances = json.loads(agent_instances)
+                updated_step_attributes = {
+                    "agent_instances": agent_instances,
+                }
+                project_meta = get_project_metadata_for_page(page["id"])
+                self.agents_queue.enqueue(
+                    "agents.wikiagent.project_agent.utils.update_tape_step",
+                    kwargs={
+                        "wiki_context": WikiContextInfo(
+                            page_id=page["id"],
+                            project_id=project_meta["project_id"],
+                            project_context=ProjectContextInfo(
+                                tapes_chapter_id=project_meta["tapes"]["chapter_id"]
+                            ),
+                        ),
+                        "step_index": -1,
+                        "update": updated_step_attributes,
+                    },
+                )
+            elif page["markdown"].startswith("### Step 5/5"):
+                pages = extract_code(
+                    extract_section_content(
+                        page["markdown"],
+                        "#### Page Generation Instructions & Agent Assignment",
+                    )
+                )
+                if pages:
+                    pages = json.loads(pages)
+                updated_step_attributes = {
+                    "pages": pages,
+                }
+                project_meta = get_project_metadata_for_page(page["id"])
+                self.agents_queue.enqueue(
+                    "agents.wikiagent.project_agent.utils.update_tape_step",
+                    kwargs={
+                        "wiki_context": WikiContextInfo(
+                            page_id=page["id"],
+                            project_id=project_meta["project_id"],
+                            project_context=ProjectContextInfo(
+                                tapes_chapter_id=project_meta["tapes"]["chapter_id"]
+                            ),
+                        ),
+                        "step_index": -1,
+                        "update": updated_step_attributes,
+                    },
+                )
 
     def handle_page_delete(self, event: BookStackWebhookPayload):
         if event.related_item.book_id in [

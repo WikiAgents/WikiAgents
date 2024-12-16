@@ -20,7 +20,7 @@ class WikiAgentsEnvironment(Environment):
     def __init__(self, agent_name: str):
         super().__init__()
         self.client = AgentBookStackClient(agent_name)
-        self.queue = Queue("agents-queue", Redis("redis", 6379), is_async=False)
+        self.queue = Queue("tools-queue", Redis("redis", 6379), is_async=False)
 
     def react(self, tape: WikiAgentsTape) -> WikiAgentsTape:
         actions = [

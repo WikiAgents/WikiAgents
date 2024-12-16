@@ -74,7 +74,7 @@ class AvailableAgentsObservation(WikiAgentsObservation):
 class AgentSelectionThought(WikiAgentsThought):
     kind: Literal["agent_selection_thought"] = "agent_selection_thought"
     selected_agents: List[dict] = Field(
-        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'agent_id': <agent_page_id>, 'reason': <why_the_agent_was_chosen>}]"
+        description="The list of selected agents. Must be in the form of: [{'name': <agent_name>, 'page_id': <agent_page_id>, 'reason': <why_the_agent_was_chosen>}]"
     )
 
 
@@ -94,7 +94,48 @@ class AllToolsObservation(WikiAgentsObservation):
 class AgentInstancesThought(WikiAgentsThought):
     kind: Literal["agent_instances_thought"] = "agent_instances_thought"
     agent_instances: List[dict] = Field(
-        description="The list of agent instances. Must be in the form of: [{'name': <unique_agent_name>, 'agent_id': <agent_page_id>, 'description': <agent_description>, 'parameters': <customized_parameters>, 'tools': <list_of_tool_names>}]"
+        description="The list of agent instances. Must be in the form of: [{'unique_name': <unique_agent_name>, 'page_id': <agent_page_id>, 'description': <agent_description>, 'parameters': <customized_parameters>, 'tools': <list_of_tool_names>}]"
+    )
+
+
+from pydantic import BaseModel
+
+
+class AssistantThought(WikiAgentsThought):
+    content: str
+    kind: Literal["assistant_thought"] = "assistant_thought"
+
+
+class PageAssignment(BaseModel):
+    book: str = Field(description="The name of the book containing the page.")
+    chapter: Optional[str] = Field(
+        description="The name of the chapter containing the page.", default=""
+    )
+    page: str = Field(description="The name of the page.")
+    agent: str = Field(
+        description="The name of the agent instance that is assigned to this page. Must be the name of a previously generated agent instance in agent_instances_thought agent_instances"
+    )
+    prompt: str = Field(
+        description="The prompt that will be used to generate the content of the page."
+    )
+
+
+class AgentInstanceNamesThought(WikiAgentsThought):
+    kind: Literal["agent_instance_names"] = "agent_instance_names"
+    agents: List[str] = Field(
+        description="The list of previously created agent instance names. Not the names of the base agent."
+    )
+
+
+class PagesThought(WikiAgentsThought):
+    kind: Literal["pages_thought"] = "pages_thought"
+    pages: List[str] = Field(description="The list of previously defined page names.")
+
+
+class PageInstructionsThought(WikiAgentsThought):
+    kind: Literal["page_instructions_thought"] = "page_instructions_thought"
+    pages: List[PageAssignment] = Field(
+        description="List of dict containing keys: book, chapter, page, agent and prompt."
     )
 
 
@@ -110,6 +151,10 @@ ProjectPlannerAgentTapeStep = (
         GetTools,
         AllToolsObservation,
         AgentInstancesThought,
+        AssistantThought,
+        PageInstructionsThought,
+        AgentInstanceNamesThought,
+        PagesThought,
     ]
     | WikiAgentsTapeStep
 )
@@ -145,6 +190,25 @@ agent_selection_steps = get_step_schemas_from_union_type(
     Annotated[
         Union[
             AgentSelectionThought, GetTools, AllToolsObservation, AgentInstancesThought
+        ],
+        Field(discriminator="kind"),
+    ]
+)
+
+page_instructions_plan_steps = get_step_schemas_from_union_type(
+    Annotated[
+        Union[AssistantThought, AgentInstanceNamesThought, PagesThought],
+        Field(discriminator="kind"),
+    ]
+)
+
+page_instructions_steps = get_step_schemas_from_union_type(
+    Annotated[
+        Union[
+            AssistantThought,
+            AgentInstanceNamesThought,
+            PagesThought,
+            PageInstructionsThought,
         ],
         Field(discriminator="kind"),
     ]

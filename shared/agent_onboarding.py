@@ -97,6 +97,7 @@ class AgentOnboarding:
     def generate_agent_user(self, name: str):
         with SessionLocal() as session:
             user = session.query(User).filter_by(name=name).first()
+            token_id, token_secret = None, None
             if not user:
                 slug = name.replace(" ", "").lower()
                 user = User(

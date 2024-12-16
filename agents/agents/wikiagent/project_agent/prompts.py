@@ -87,9 +87,9 @@ Guidelines:
    - Organize related subtopics as Chapters within each Book.
    - Use Pages for specific deliverables, explanations, or fine-grained content within each Chapter.
 
-
-The output structure must cover ONLY `key_components` from the `final_requirements_refinement`! Use the key components as outer containers (e.g. as book or as chapter) and structure the details of the component into pages.
-DO NOT INCLUDE COMPONENTS OTHER THAN THOSE IN `final_requirements_refinement`! Ignore the key components of previous refinements!
+ALWAYS use descriptive page names! DO NOT name them Page 1, Page 2, ...
+The output structure must cover ONLY key_components from the final_requirements_refinement! Use the key components as outer containers (e.g. as book or as chapter) and structure the details of the component into pages.
+DO NOT INCLUDE COMPONENTS OTHER THAN THOSE IN final_requirements_refinement! Ignore the key components of previous refinements!
 
 Respond with kind="project_output_structure_suggestion"
 
@@ -120,15 +120,47 @@ Your task is to select agents from the available agents in the system, suited fo
 
 2. Analyze Project Needs: Review the refined_description and key_components in the final_requirements_refinement to identify the roles and skills required for successful content generation.
 
-3. Select Agents: Match the available agents to the required roles based on their capabilities. Output the agent names and give a reason why the agent was selected. Respond with kind="agent_selection_thought"
+3. Select Agents: Match the available agents to the required roles based on their capabilities. Output the agent names, corresponding page_ids, and give a reason why the agent was selected. Respond with kind="agent_selection_thought"
 
 4. Retrieve Tools: Use the tool get_all_tools to list all available tools. You can assign tools to agents in the next step. Respond with kind="get_all_tools"
 
-4. Define Agent Instances: Create instances of your selected agents (max. 8 agent instances). Each selected agent can be instantiated multiple times with adjusted configurations. For each agent instance, provide a unique_name, the agent_id of the original agent, description, parameters and tools. Only adjust parameters that are already defined in the original agent (if the original exposes a parameter, it means that you are encouraged to adjust the value of the parameter)! If a parameter name contains 'system_prompt' or 'additional_system_prompt' it means you can adjust the persona of the agent, be specific and create highly skilled, top notch personas (e.g. 'You are a high-skilled expert in the domain of ...'). The description must be in alignment with the configured parameters (e.g. adjusted prompt) and tools! Respond with kind="agent_instances_thought"
+5. Define Agent Instances: Create instances of your selected agents (e.g. one instance for each required expert w.r.t. key components, max. 8 agent instances, min. 3). Each selected agent can be instantiated multiple times with adjusted configurations. For each agent instance, provide a unique_name, the page_id of the original agent, description, parameters and tools. Only adjust parameters that are already defined in the original agent (if the original exposes a parameter, it means that you are encouraged to adjust the value of the parameter)! If a parameter name contains 'system_prompt' or 'additional_system_prompt' it means you can adjust the persona of the agent, be specific and create highly skilled, top notch system prompts (e.g. 'You are a high-skilled expert in the domain of ...'). The description must be in alignment with the configured parameters (e.g. adjusted prompt) and tools! You are allowed to modify the tools list of each agent instance. Provide valid tool names. Respond with kind="agent_instances_thought"
 
 """
     + short_format_instruction
 )
+
+PAGE_INSTRUCTIONS = (
+    """Your task is to assign an agent to each page and to generate a detailed prompt that will be used to generate the page content.
+
+Choose from these agents: 
+{agents}
+
+Here are the pages, add the agent and prompt to each:
+{pages}
+
+Understand the page descriptions and generate the prompt that is used to generate the page content.
+Ensure every page has an agent assigned and a detailed prompt
+
+When you are done, respond with kind='page_instructions_thought'
+
+"""
+    + short_format_instruction
+)
+
+
+# PAGE_INSTRUCTIONS = """Your task is to assign an agent from agent_instances (in agent_instances_thought) to each page in the selected project_output_structure_suggestion. The final output will be of kind='page_instructions_thought'
+# Follow these steps:
+
+# 1. Review agent_instances in agent_instances_thought to understand their roles and capabilities. Respond with kind='agent_instance_names'
+# 2. Analyze the chosen project_output_structure_suggestion to identify all pages. Respond with kind='pages_thought'
+# 3. Match the most suitable agent instance to each page based on its function and requirements.
+# 4. Define detailed prompts for generating each page. Make sure to include the context of the page (book, chapter).
+# 5. Ensure every page is assigned an agent instance and a prompt, with no omissions.
+
+# When you are done, respond with kind='page_instructions_thought'
+
+# """ + short_format_instruction
 
 
 class PromptRegistry:
@@ -139,3 +171,4 @@ class PromptRegistry:
     final_requirements_refinement = FINAL_REQUIREMENTS_REFINEMENT
     output_structure_suggestion = OUTPUT_STRUCTURE_SUGGESTION
     select_agents = SELECT_AGENTS
+    page_instructions = PAGE_INSTRUCTIONS

@@ -16,9 +16,14 @@ DON'T MAKE UP USERDEFINED ACTIONS! ONLY USED USERDEFINED ACTIONS THAT ARE LISTED
 
 """
 
-PLAN_GUIDANCE = f"Write a natural language plan on how to use tools to help the user. Respond with kind='plan'. {short_format_instruction}"
+PLAN_GUIDANCE = f"""Write a natural language plan on how to use tools to help the user. Respond with kind='plan'.
+{short_format_instruction}
+"""
 
-ACT_GUIDANCE = f"Follow the plan you created earlier. When you are done, output your response to the user with kind='assistant'. {short_format_instruction}"
+ACT_GUIDANCE = f"""Follow the plan you created earlier.
+When you are done, output well-structured markdown (largest heading is #####). Respond with kind='assistant'.
+{short_format_instruction}
+"""
 
 
 class PromptRegistry:

@@ -3,6 +3,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 import json
 from typing import Any
+import re
 
 from agents.wikiagent.project_agent.environment import ProjectPlannerEnvironment
 from agents.wikiagent.project_agent.prompts import PromptRegistry
@@ -19,6 +20,9 @@ from agents.wikiagent.project_agent.steps import (
     ProjectPlannerAgentTapeStep,
     FinalRefineProjectRequirementsThought,
     AgentInstancesThought,
+    page_instructions_plan_steps,
+    page_instructions_steps,
+    PageInstructionsThought,
 )
 from agents.wikiagent.project_agent.tape import ProjectPlannerTape
 from pydantic import Field
@@ -67,6 +71,11 @@ from agents.creative_feedback_agents.tinytroupe.brainstorm import (
 from agents.creative_feedback_agents.tinytroupe.project_brainstorming import (
     project_requirements_brainstorming,
 )
+from redis import Redis
+from rq import Queue
+from shared.agent_onboarding import AgentOnboarding
+from shared.utils import get_project_metadata_for_page
+from shared.templates import AGENT_TEMPLATE
 
 
 llm = LiteLLM(
@@ -92,10 +101,12 @@ class ProjectRequirementsWizard:
         self.page_content = self.page["markdown"]
         self.env = ProjectPlannerEnvironment("WikiAgent")
         self.next_steps: dict = {
-            "### Step 1/4": self.refine_project_requirements,
-            "### Step 2/4": self.suggest_output_structure,
-            "### Step 3/4": self.suggest_agents,
-            "### Step 4/4": lambda: None,
+            "### Step 1/5": self.refine_project_requirements,
+            "### Step 2/5": self.suggest_output_structure,
+            "### Step 3/5": self.suggest_agents,
+            "### Step 4/5": self.page_instructions,
+            "### Step 5/5": self.generate,
+            "### Wizard End": lambda: None,
         }
 
     def run_next_step(self):
@@ -133,12 +144,12 @@ class ProjectRequirementsWizard:
                 )
                 comment_id = self.client.create_comment(
                     f"🚀<strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
-                    page_id=self.wiki_context.page_id,
+                    page_id=self.page["id"],
                 )
                 comments = project_requirements_brainstorming(
                     agent_contexts=creative_agents,
                     wiki_context=WikiContextInfo(
-                        page_id=self.wiki_context.page_id, local_comment_id=comment_id
+                        page_id=self.page["id"], local_comment_id=comment_id
                     ),
                     project_description=project_description,
                     project_type=project_type,
@@ -147,7 +158,7 @@ class ProjectRequirementsWizard:
                 brainstorming_summary = comments[0].comment
                 self.client.create_comment(
                     brainstorming_summary,
-                    page_id=self.wiki_context.page_id,
+                    page_id=self.page["id"],
                     parent_id=comment_id,
                 )
 
@@ -202,7 +213,6 @@ class ProjectRequirementsWizard:
         key_components = (
             f"```json\n{json.dumps(tape[-1].key_components, indent=2)}\n```"
         )
-        # key_components = "\n".join(f"- {item}" for item in tape[-1].key_components)
         new_content = STEP_2.format(
             project_description=tape[-1].refined_description,
             key_components=key_components,
@@ -260,7 +270,7 @@ class ProjectRequirementsWizard:
                 content=f"The user has selected the {structure_type} structure. Forget the {'simple' if structure_type == 'detailed' else 'detailed'} structure!"
             )
         )
-        tape = tape.append(SetNextNode(next_node="agents_selector"))
+        tape = tape.append(SetNextNode(next_node="agents_selector_plan"))
         agent = Agent.create(
             llm,
             nodes=[
@@ -301,6 +311,177 @@ class ProjectRequirementsWizard:
         self.client.update_page(page_id=self.page["id"], markdown=new_content)
         save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
         return STEP_4_COMMENT
+
+    def page_instructions(self):
+        tape = get_project_requirements_tape(wiki_context=self.wiki_context)
+        if tape is None:
+            return "💥 Tape not found!"
+        tape = tape.append(SetNextNode(next_node="page_instructions"))
+        agents_thoughts = [
+            s for s in tape.steps if isinstance(s, AgentInstancesThought)
+        ]
+        assert len(agents_thoughts) > 0
+        agents_names = [
+            {"name": a["unique_name"], "description": a["description"]}
+            for a in agents_thoughts[0].agent_instances
+        ]
+        user_steps = [
+            s
+            for s in tape.steps
+            if isinstance(s, UserStep)
+            and s.content.startswith("The user has selected the ")
+        ]
+        assert len(user_steps) > 0
+        match = re.search(
+            r"^The user has selected the (simple|detailed)", user_steps[-1].content
+        )
+        assert match is not None
+        output_structure_type = match.group(1)
+        output_structure_steps = [
+            s for s in tape.steps if isinstance(s, OutputStructureSuggestionThought)
+        ]
+        assert len(output_structure_steps) > 0
+        if output_structure_type == "simple":
+            output_structure = output_structure_steps[0].simple_structure
+        else:
+            output_structure = output_structure_steps[0].detailed_structure
+
+        all_pages = []
+        for book, chapters in output_structure.items():
+            for chapter, pages in chapters.items():
+                for page, description in pages.items():
+                    all_pages.append(
+                        {
+                            "name": page,
+                            "description": description,
+                            "chapter": chapter,
+                            "book": book,
+                        }
+                    )
+
+        agent = Agent.create(
+            llm,
+            nodes=[
+                # ProjectPlannerNode(
+                #     name="page_instructions_plan",
+                #     system_prompt=PromptRegistry.page_instructions.format(agents=agents_names, pages=pages),
+                #     guidance="Follow the plan.",
+                #     allowed_steps=page_instructions_plan_steps,
+                #     next_node="page_instructions",
+                # ),
+                ProjectPlannerNode(
+                    name="page_instructions",
+                    system_prompt="",
+                    guidance=PromptRegistry.page_instructions.format(
+                        agents=agents_names, pages=all_pages
+                    ),
+                    allowed_steps=page_instructions_steps,
+                    next_node="page_instructions",
+                ),
+            ],
+        )
+        page_instructions_step = None
+        for event in main_loop(agent, tape, self.env, max_loops=5):
+            if ae := event.agent_event:
+                if isinstance(ae.step, PageInstructionsThought):
+                    tape = ae.partial_tape
+                    page_instructions_step = ae.step
+                    break
+        assert page_instructions_step is not None
+        page_instructions = f"```json\n{json.dumps(page_instructions_step.model_dump()['pages'], indent=2)}\n```"
+        new_content = STEP_5.format(page_instructions=page_instructions)
+        self.client.update_page(page_id=self.page["id"], markdown=new_content)
+        save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
+        return STEP_5_COMMENT
+
+    def generate(self):
+        tape = get_project_requirements_tape(wiki_context=self.wiki_context)
+        if tape is None:
+            return "💥 Tape not found!"
+
+        metadata = get_project_metadata_for_page(self.page["id"])
+        assert isinstance(tape[-1], PageInstructionsThought)
+        # generate agent users
+        agents_thoughts = [
+            s for s in tape.steps if isinstance(s, AgentInstancesThought)
+        ]
+        assert len(agents_thoughts) > 0
+        all_agents = AgentsRedisCache().get_all_agents()
+        agent_instances = agents_thoughts[0].agent_instances
+        for instance in agent_instances:
+            base_agent = [a for a in all_agents if a.page_id == instance["page_id"]][
+                0
+            ].model_copy()
+            base_agent.name = instance["unique_name"]
+            base_agent.parameters = instance["parameters"]
+            base_agent.tools = instance["tools"]
+            base_agent.description = instance["description"]
+            agent_markdown = AGENT_TEMPLATE.format(
+                description=instance["description"],
+                code_path=json.dumps(base_agent.code_path, indent=2),
+                parameters=json.dumps(instance["parameters"], indent=2),
+                tools=json.dumps(instance["tools"], indent=2),
+            )
+            new_agent_page = self.client.create_page(
+                book_id=metadata["metadata_book"]["id"],
+                chapter_id=metadata["involved_agents"]["chapter_id"],
+                name=instance["unique_name"],
+                markdown=agent_markdown,
+            )
+            base_agent.page_id = new_agent_page["id"]
+            AgentOnboarding().onboard_agent(base_agent)
+
+        queue = Queue("agents-queue", Redis("redis", 6379))
+        pages_to_generate = tape[-1].pages
+        # create books & chapters
+        books_to_generate = set([p.book for p in pages_to_generate])
+        books = {}
+        for book in books_to_generate:
+            response = self.client.create_book(book)
+            shelf = self.client.get_shelf(self.wiki_context.project_id)
+            shelf_book_ids = [b["id"] for b in shelf["books"]] + [response["id"]]
+            self.client.update_shelf(self.wiki_context.project_id, books=shelf_book_ids)
+            chapters = set(
+                [page.chapter for page in pages_to_generate if page.book == book]
+            )
+            books[book] = {"id": response["id"], "chapters": {}}
+            for chapter in chapters:
+                c = self.client.create_chapter(response["id"], name=chapter)
+                books[book]["chapters"][chapter] = {"id": c["id"]}
+
+        for page in pages_to_generate:
+            agent = AgentsRedisCache().get_agent(page.agent)
+            client = AgentBookStackClient(agent.name)
+            book_id = books[page.book]["id"]
+            chapter_id = books[page.book]["chapters"][page.chapter]["id"]
+
+            page_response = client.create_page(
+                book_id=book_id,
+                chapter_id=chapter_id,
+                name=page.page,
+                markdown=f"*Generation in progress:*\n*{page.prompt}*",
+            )
+            wiki_context = WikiContextInfo(
+                page_id=page_response["id"],
+                chapter_id=chapter_id,
+                book_id=book_id,
+                project_context=ProjectContextInfo(
+                    project_id=metadata["project_id"],
+                    metadata_book_id=metadata["metadata_book"]["id"],
+                    tapes_chapter_id=metadata["tapes"]["chapter_id"],
+                ),
+            )
+            queue.enqueue(
+                f"{agent.code_path}.generate",
+                kwargs={
+                    "agent_context": agent,
+                    "wiki_context": wiki_context,
+                    "instructions": page.prompt,
+                },
+            )
+        self.client.update_page(page_id=self.page["id"], markdown=STEP_6)
+        save_project_requirements_tape(wiki_context=self.wiki_context, tape=tape)
+        return STEP_6_COMMENT
 
 
 def react_to_comment(wiki_context: WikiContextInfo, comment: str):
