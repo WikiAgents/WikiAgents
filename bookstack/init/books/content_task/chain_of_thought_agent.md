@@ -1,5 +1,5 @@
 ##### Description
-An agent that uses Chain of Thought reasoning. Has Wikipedia access.
+An agent that uses Chain of Thought reasoning. Customizable system prompt.
 
 ---
 
@@ -13,8 +13,7 @@ An agent that uses Chain of Thought reasoning. Has Wikipedia access.
 ##### Parameters
 ```json
 {
-  "system_prompt": "",
-  "llm_temperature": 0.1
+  "system_prompt": ""
 }
 ```
 ---

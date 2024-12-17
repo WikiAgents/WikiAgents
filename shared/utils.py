@@ -69,6 +69,59 @@ def get_project_metadata_for_page(page_id: int):
     return metadata if metadata["metadata_book"] else None
 
 
+# quick and dirty, merge with function above later.
+def get_metadata_for_project_id(project_id: int):
+    client = AgentBookStackClient("WikiAgent")
+    metadata_book = None
+    involved_agents, involved_agents_chapter_id = [], None
+    creative_agents, creative_agents_chapter_id = [], None
+    integrity_agents, integrity_agents_chapter_id = [], None
+    tapes, tapes_chapter_id = [], None
+    for b in client.get_shelf(project_id).get("books", []):
+        if b["name"] == PROJECT_METADATA_BOOK_NAME:
+            metadata_book = b
+            for page in client.get_book(b["id"])["contents"]:
+                if page["name"] == PROJECT_CREATIVE_FEEDBACK_CHAPTER_NAME:
+                    creative_agents_chapter = client.get_chapter(page["id"])
+                    creative_agents_chapter_id = creative_agents_chapter["id"]
+                    creative_agents = creative_agents_chapter["pages"]
+                elif page["name"] == PROJECT_CONTENT_INTEGRITY_AGENTS_CHAPTER_NAME:
+                    integrity_agents_chapter = client.get_chapter(page["id"])
+                    integrity_agents_chapter_id = integrity_agents_chapter["id"]
+                    integrity_agents = integrity_agents_chapter["pages"]
+                elif page["name"] == PROJECT_AGENTS_CHAPTER_NAME:
+                    involved_agents_chapter = client.get_chapter(page["id"])
+                    involved_agents_chapter_id = involved_agents_chapter["id"]
+                    involved_agents = involved_agents_chapter["pages"]
+                elif page["name"] == PROJECT_TAPES_CHAPTER_NAME:
+                    tapes_chapter = client.get_chapter(page["id"])
+                    tapes_chapter_id = tapes_chapter["id"]
+                    tapes = tapes_chapter["pages"]
+
+            break
+        if metadata_book is not None:
+            break
+    metadata = {
+        "project_id": project_id,
+        "project_name": None,
+        "metadata_book": metadata_book,
+        "creative_agents": {
+            "chapter_id": creative_agents_chapter_id,
+            "pages": creative_agents,
+        },
+        "integrity_agents": {
+            "chapter_id": integrity_agents_chapter_id,
+            "pages": integrity_agents,
+        },
+        "involved_agents": {
+            "chapter_id": involved_agents_chapter_id,
+            "pages": involved_agents,
+        },
+        "tapes": {"chapter_id": tapes_chapter_id, "pages": tapes},
+    }
+    return metadata if metadata["metadata_book"] else None
+
+
 import re
 
 

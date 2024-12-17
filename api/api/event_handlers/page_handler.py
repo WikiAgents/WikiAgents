@@ -49,6 +49,7 @@ class PageEventHandler(BaseEventHandler):
             if page["chapter_id"] > 0:
                 self.agents_queue.enqueue(
                     "agents.creative_feedback_agents.tinytroupe.personas.create_persona",
+                    timeout=600,
                     kwargs={"page_id": page["id"], "chapter_id": page["chapter_id"]},
                 )
             else:

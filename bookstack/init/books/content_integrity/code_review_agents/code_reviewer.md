@@ -1,11 +1,11 @@
 #### Description
-LLM Agent that reviews code
+A placeholer for a LLM Agent that reviews code
 
 ---
 
 ##### Code Path
 ```json
-"agents.content_integrity.code.code_reviewer.run_code_reviewer"
+"agents.content_integrity.code.code_reviewer.needs_implementation"
 ```
 ---
 

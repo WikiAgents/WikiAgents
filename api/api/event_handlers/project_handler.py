@@ -3,6 +3,8 @@ from api.models.webhook_payloads import BookStackRelatedItem, BookStackWebhookPa
 from shared.constants import *
 from shared.agents_redis_cache import AgentsRedisCache
 import json
+from shared.utils import get_metadata_for_project_id
+from shared.agent_onboarding import AgentOnboarding
 
 
 class ProjectEventHandler(BaseEventHandler):
@@ -15,7 +17,11 @@ class ProjectEventHandler(BaseEventHandler):
         self.client.update_shelf(project["id"], books=[metadata_book["id"]])
         creative_agents = AgentsRedisCache().get_agents_by_type("creative_agent")
         creative_agents = [a.name for a in creative_agents]
-        configured_creatives = {"agents": [], "rounds": 3}
+        configured_creatives = {
+            "agents": [],
+            "focus_on": "LLMs and LLM agents usage",
+            "rounds": 3,
+        }
         grounding = {
             "agent": "Prompt Grounder",
             "grounding": ["<knowledge_base_book>/<knowledge_base_page>"],
@@ -27,7 +33,7 @@ class ProjectEventHandler(BaseEventHandler):
                 project_description=description,
                 configured_creatives=f"```json\n{json.dumps(configured_creatives, indent=2)}\n```",
                 available_creatives=f"```json\n{json.dumps(creative_agents)}\n```",
-                grounding=f"```json\n{json.dumps(grounding, indent=2)}\n```",
+                # grounding=f"```json\n{json.dumps(grounding, indent=2)}\n```",
             ),
             tags=[{"name": "WikiAgents", "value": "Requirements"}],
         )
@@ -66,4 +72,6 @@ class ProjectEventHandler(BaseEventHandler):
         pass
 
     def handle_project_delete(self, event: BookStackWebhookPayload):
-        pass
+        metadata = get_metadata_for_project_id(event.related_item.id)
+        for page in metadata["involved_agents"]["pages"]:
+            AgentOnboarding().offboard_agent(page["name"])

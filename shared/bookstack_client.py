@@ -93,13 +93,15 @@ class BookStackAPIClient:
             response.raise_for_status()
         return response.json()
 
-    def create_chapter(self, book_id, name, description=None, tags=None):
+    def create_chapter(self, book_id, name, description=None, tags=None, priority=None):
         url = f"{self.base_url}/api/chapters"
         data = {"book_id": book_id, "name": name}
         if description is not None:
             data["description"] = description
         if tags is not None:
             data["tags"] = tags
+        if priority is not None:
+            data["priority"] = priority
         response = requests.post(url, headers=self.headers, json=data)
         if not response.ok:
             print(response.content)
@@ -169,6 +171,7 @@ class BookStackAPIClient:
         html=None,
         markdown=None,
         tags=None,
+        priority=None,
     ):
         url = f"{self.base_url}/api/pages"
         data = {"name": name}
@@ -182,7 +185,10 @@ class BookStackAPIClient:
             data["markdown"] = markdown
         if tags is not None:
             data["tags"] = tags
-        data["priority"] = 1
+        if priority is not None:
+            data["priority"] = priority
+        else:
+            data["priority"] = 1
         response = requests.post(url, headers=self.headers, json=data)
         if not response.ok:
             print(response.content)

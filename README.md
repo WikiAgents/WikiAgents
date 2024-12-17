@@ -42,8 +42,8 @@ Designed for both technical and non-technical users, WikiAgents makes it easy to
 
 ## Potential Applications
 
-- **LLM Agent Education**   
-  Facilitate the education and training of users on Large Language Model (LLM) agents with WikiAgents’ intuitive customization options for agents and tools. These features allow users to experiment, learn, and refine their understanding of LLM development and management. Additionally, the platform’s transparency features, such as Tapes, log detailed records of agent decisions and interactions, providing valuable insights into the agent's thought process and actions.
+- **LLM Agents Education**   
+WikiAgents simplifies user education on Large Language Model (LLM) agents with intuitive customization options, enabling experimentation and learning. Transparency features like Tapes log detailed records of agent decisions and interactions, offering valuable insights into their thought processes.
 
 - **Personal Research & Task Automation**   
   Use WikiAgents as a personal platform for automating research tasks, managing knowledge, and streamlining workflows tailored to individual needs.

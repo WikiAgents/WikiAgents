@@ -74,7 +74,11 @@ class AgentsRedisCache:
     def get_agents_by_type(
         self,
         type: Literal[
-            "content_agent", "creative_agent", "integrity_agent", "wikiagent"
+            "content_agent",
+            "content_agent_instance",
+            "creative_agent",
+            "integrity_agent",
+            "wikiagent",
         ],
     ):
         return [a for a in self.get_all_agents() if a.type == type]

@@ -16,5 +16,5 @@ def call_rq_function(func: str, kwargs: dict = {}):
 
     """
     queue = Queue("agents-queue", Redis("redis", 6379), is_async=False)
-    job = queue.enqueue(func, kwargs=kwargs)
+    job = queue.enqueue(func, timeout=600, kwargs=kwargs)
     return job.result

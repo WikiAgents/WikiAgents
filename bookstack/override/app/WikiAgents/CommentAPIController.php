@@ -50,7 +50,7 @@ class CommentAPIController extends ApiController
         // Create a new comment.
         $this->checkPermission('comment-create-all');
         $comment = $this->commentRepo->create($page, $request['html'], $request['parent_id'] ?? null);
-        return response()->json($comment->id);
+        return response()->json($comment->local_id);
     }
 
 }

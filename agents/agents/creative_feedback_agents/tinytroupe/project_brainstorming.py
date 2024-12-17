@@ -33,9 +33,11 @@ Focus on:
 
 1. What the project is about.
 2. Its key components or areas to explore.
-3. Any gaps or questions that might need addressing.
-4. Talk to the others!
+3. Specifically focus on {focus_on} within the project scope.
+4. Any gaps or questions that might need addressing.
+5. Talk to the others!
 
+REMEMBER: It's about written projects (in textual form), not a physical project. 
 Once you've thought it through, start talking! Share your ideas, ask questions, and build on what others say. Let's turn these thoughts into a lively, productive discussion! When you respond to someone, always include a new aspect!
 """
 
@@ -50,6 +52,7 @@ def project_requirements_brainstorming(
     wiki_context: WikiContextInfo | dict,
     project_description: str,
     project_type: str,
+    focus_on: str,
     rounds: int = 3,
 ):
     if isinstance(agent_contexts[0], dict):
@@ -71,7 +74,9 @@ def project_requirements_brainstorming(
     world.make_everyone_accessible()
     world.broadcast(
         PRB_PROMPT.format(
-            project_type=project_type, project_description=project_description
+            project_type=project_type,
+            project_description=project_description,
+            focus_on=focus_on,
         )
     )
     world.run(rounds)

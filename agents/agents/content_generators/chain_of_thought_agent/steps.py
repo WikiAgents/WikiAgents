@@ -12,6 +12,7 @@ from agents.base.steps import (
     ReadPageObservation,
     UserDefinedTool,
     UserDefinedToolObservation,
+    AssistantStep,
 )
 
 
@@ -44,10 +45,11 @@ plan_steps = get_step_schemas_from_union_type(
 act_steps = get_step_schemas_from_union_type(
     Annotated[
         Union[
-            ReadPageAction,
-            ReadPageObservation,
+            # ReadPageAction,
+            # ReadPageObservation,
             UserDefinedTool,
             UserDefinedToolObservation,
+            AssistantStep,
         ],
         Field(discriminator="kind"),
     ]

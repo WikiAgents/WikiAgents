@@ -41,6 +41,7 @@ class RedisAgent(BaseModel):
     type: Optional[
         Literal[
             "content_agent",
+            "content_agent_instance",
             "creative_agent",
             "integrity_agent",
             "wikiagent",

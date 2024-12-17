@@ -20,6 +20,7 @@ def check_bias(wiki_context: dict, comment: str):
     queue = Queue("agents-queue", Redis("redis", 6379), is_async=False)
     job = queue.enqueue(
         "agents.content_integrity.bias.bias_scanner.bias_scanner.run_bias_scanner_agent",
+        timeout=600,
         kwargs={"wiki_context": wiki_context, "comment": comment},
     )
     return job.result

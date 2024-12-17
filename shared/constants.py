@@ -32,11 +32,6 @@ Available Creative Feedback Agents:
 
 ---
 
-#### Grounding
-{grounding}
-
----
-
 
 *Write a `/next` comment to proceed.*   
 *Edit the page if you want to make changes.*    

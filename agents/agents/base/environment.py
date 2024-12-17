@@ -172,6 +172,7 @@ class WikiAgentsEnvironment(Environment):
                     case UserDefinedTool():
                         job = self.queue.enqueue(
                             "tools.userdefined_tool.run",
+                            timeout=600,
                             kwargs={
                                 "tool_name": action.tool_name,
                                 "parameters": action.parameters,

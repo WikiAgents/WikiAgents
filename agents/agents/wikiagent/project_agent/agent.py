@@ -76,6 +76,12 @@ from rq import Queue
 from shared.agent_onboarding import AgentOnboarding
 from shared.utils import get_project_metadata_for_page
 from shared.templates import AGENT_TEMPLATE
+import re
+
+
+def extract_number(s: str) -> int:
+    match = re.match(r"^(\d+)\.", s)
+    return int(match.group(1)) if match else 1
 
 
 llm = LiteLLM(
@@ -136,6 +142,7 @@ class ProjectRequirementsWizard:
                 creative_agents = [
                     redis.get_agent(a) for a in creative_agents_config.get("agents", [])
                 ]
+                focus_on = creative_agents_config.get("focus_on", "everything")
                 n_rounds = creative_agents_config.get("rounds", 3)
                 agents_str = (
                     ", ".join([a.name for a in creative_agents[:-1]])
@@ -143,7 +150,7 @@ class ProjectRequirementsWizard:
                     + creative_agents[-1].name
                 )
                 comment_id = self.client.create_comment(
-                    f"🚀<strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
+                    f"🚀 <strong>{agents_str}</strong> will brainstorm about your project! I will use the summary of their discussion for the project refinement.",
                     page_id=self.page["id"],
                 )
                 comments = project_requirements_brainstorming(
@@ -153,6 +160,7 @@ class ProjectRequirementsWizard:
                     ),
                     project_description=project_description,
                     project_type=project_type,
+                    focus_on=focus_on,
                     rounds=n_rounds,
                 )
                 brainstorming_summary = comments[0].comment
@@ -416,6 +424,7 @@ class ProjectRequirementsWizard:
             base_agent.parameters = instance["parameters"]
             base_agent.tools = instance["tools"]
             base_agent.description = instance["description"]
+            base_agent.type = "content_agent_instance"
             agent_markdown = AGENT_TEMPLATE.format(
                 description=instance["description"],
                 code_path=json.dumps(base_agent.code_path, indent=2),
@@ -436,17 +445,20 @@ class ProjectRequirementsWizard:
         # create books & chapters
         books_to_generate = set([p.book for p in pages_to_generate])
         books = {}
-        for book in books_to_generate:
+        for book in sorted(books_to_generate):
             response = self.client.create_book(book)
             shelf = self.client.get_shelf(self.wiki_context.project_id)
             shelf_book_ids = [b["id"] for b in shelf["books"]] + [response["id"]]
             self.client.update_shelf(self.wiki_context.project_id, books=shelf_book_ids)
-            chapters = set(
-                [page.chapter for page in pages_to_generate if page.book == book]
+            chapters = sorted(
+                set([page.chapter for page in pages_to_generate if page.book == book])
             )
             books[book] = {"id": response["id"], "chapters": {}}
             for chapter in chapters:
-                c = self.client.create_chapter(response["id"], name=chapter)
+                chapter_number = extract_number(chapter)
+                c = self.client.create_chapter(
+                    response["id"], name=chapter, priority=chapter_number
+                )
                 books[book]["chapters"][chapter] = {"id": c["id"]}
 
         for page in pages_to_generate:
@@ -454,12 +466,13 @@ class ProjectRequirementsWizard:
             client = AgentBookStackClient(agent.name)
             book_id = books[page.book]["id"]
             chapter_id = books[page.book]["chapters"][page.chapter]["id"]
-
+            page_number = extract_number(page.page)
             page_response = client.create_page(
                 book_id=book_id,
                 chapter_id=chapter_id,
                 name=page.page,
                 markdown=f"*Generation in progress:*\n*{page.prompt}*",
+                priority=page_number,
             )
             wiki_context = WikiContextInfo(
                 page_id=page_response["id"],
@@ -473,6 +486,7 @@ class ProjectRequirementsWizard:
             )
             queue.enqueue(
                 f"{agent.code_path}.generate",
+                timeout=600,
                 kwargs={
                     "agent_context": agent,
                     "wiki_context": wiki_context,

@@ -1,11 +1,11 @@
 ##### Description
-A simple agent that uses its' immediate output to accomplish tasks. Supports custom system prompts but no tools. Always responds in a hilarious way.
+A funny agent that is configured to always respond in a hilarious way. Supports a custom system prompt, currently configured to always respond in a hilarious way. 
 
 ---
 
 ##### Code Path
 ```json
-"agents.content_generators.quickshot_agent.agent.QuickShotAgent"
+"agents.content_generators.chain_of_thought_agent.agent.ChainOfThoughtAgent"
 ```
 ---
 

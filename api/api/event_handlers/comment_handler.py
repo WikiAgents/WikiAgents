@@ -26,6 +26,7 @@ class CommentEventHandler(BaseEventHandler):
                 if comment.startswith("/next"):
                     job = self.agents_queue.enqueue(
                         "agents.wikiagent.project_agent.agent.react_to_comment",
+                        timeout=600,
                         kwargs={"wiki_context": wiki_context, "comment": comment},
                     )
             else:
@@ -37,6 +38,7 @@ class CommentEventHandler(BaseEventHandler):
 
                 job = self.agents_queue.enqueue(
                     "agents.wikiagent.comment_agent.react_to_comment",
+                    timeout=600,
                     kwargs={"wiki_context": wiki_context, "comment": comment},
                 )
                 if tape_page:

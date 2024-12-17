@@ -95,17 +95,19 @@ Respond with kind="project_output_structure_suggestion"
 
 Here is an example of the expected structure schema for the simple_structure and detailed_structure:
 {
-   "book1_name":
+   "1. book1_name":
    {
-      "chapter1_name": {
-         "page1_name": "short description of what the page contains",
-         "page2_name": "short description of what the page contains"
+      "1. chapter1_name": {
+         "1. page1_name": "short description of what the page contains",
+         "2. page2_name": "short description of what the page contains"
       },
-      "chapter2_name": {
-         "page1_name": "short description of what the page contains"
+      "2. chapter2_name": {
+         "1. page1_name": "short description of what the page contains"
       },      
    }
 }
+
+Make sure to always add numberings to the books, chapters and pages to preserve the order!
 
 """
     + short_format_instruction
