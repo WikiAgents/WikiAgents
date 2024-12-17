@@ -1,14 +1,13 @@
-# 🚧⏳ Work In Progress 
-![WikiAgents Logo](docs/images/logo.jpg)
+[![WikiAgents Logo](docs/images/logo.jpg)](https://www.youtube.com/watch?v=oOgGAfakdng)
 
-**WikiAgents** is a collaborative platform where humans and AI agents work together to simplify content creation and task automation. Built on the reliable and feature-rich **BookStack** platform, WikiAgents combines the flexibility of a wiki interface with advanced Large Language Model (LLM) agents to deliver a seamless experience for planning, generating, refining, and managing content.
+**WikiAgents** is a platform where humans and AI agents work together to simplify **Content Ideation**, **Generation**, **Verification**, and **General Agent Automation**. Built on the reliable and feature-rich **BookStack** platform, WikiAgents combines the flexibility of a wiki interface with advanced Large Language Model (LLM) agents to deliver a seamless experience.
 
 Designed for both technical and non-technical users, WikiAgents makes it easy to tackle everything from generating detailed reports to verifying facts, brainstorming ideas, managing knowledge and automating workflows — all in one unified platform.
 
 ## Key Features
 
-- **Domain-Specific Project Generation**  
-  Users provide a brief description of their goal, and WikiAgents automatically suggests a tailored project structure, including recommended agents, tools and requirements. Users can further refine the project, adjust settings, and start the generation process with minimal effort.
+- **Agentic Content Generation**  
+  Users provide a brief description of their goal, and WikiAgents suggests a tailored project structure, including recommended agents, tools, requirements and more, all through an agentic requirements wizard. Users can make changes at each step and review the agents' decisions on the Tape page.
 
 - **Content & Task Agents**  
   WikiAgents includes predefined agents for general content generation and task-solving. The project agent coordinates these agents to manage complex workflows. Users can also customize or integrate their own agents by creating dedicated agent pages to suit specific project needs.
@@ -17,16 +16,16 @@ Designed for both technical and non-technical users, WikiAgents makes it easy to
   WikiAgents allows users to create custom tools for agents to solve specific tasks. These tools can be easily added and configured through dedicated tool pages in the platform, enabling tailored workflows and expanded agent capabilities.
 
 - **Content Integrity Agents**  
-  Ensure content is unbiased, grounded, and factually accurate with specialized agents such as fact-checkers, bias scanners, and groundedness verifiers. These agents work seamlessly to maintain content quality and credibility.
+  Ensure content is unbiased, grounded*, and factually accurate* with specialized agents such as fact-checkers*, bias scanners, and groundedness verifiers*. *Not implemented yet.
 
 - **Creative Feedback Agents**  
   Collaborate with customizable agents, each embodying user-defined personas, to brainstorm and gather tailored creative feedback. Set specific goals for brainstorming sessions and trigger feedback rounds through simple commands or project configurations.
 
 - **Customizable Knowledge Bases**  
-  Build dynamic knowledge repositories that agents can reference for content generation and verification. Import documents (websites, PDFs, spreadsheets) and automatically convert them to markdown for easy integration into your projects. Websites can also be periodically checked and transcribed to ensure the knowledge base stays up-to-date.
+  Build knowledge repositories that agents can reference for content generation and verification. Import documents (websites, PDFs, spreadsheets) and automatically convert them to markdown for easy integration into your projects. Websites can be periodically checked and transcribed to ensure the knowledge base stays up-to-date.
 
-- **Agent Collaboration and Transparency**  
-  Collaborate seamlessly with agents through comments, providing real-time input and feedback. Every agent interaction and project generation step is logged in **Tapes**, which store detailed records of decisions, actions, and feedback. These logs are stored in each project's metadata, ensuring full transparency and easy tracking of the agent’s thought process and decisions.
+- **Agent Interaction and Transparency**  
+  Interact with agents through comments, get simple feedback or trigger complex workflows. Every agent interaction and project generation step is logged in **Tapes**, which store detailed records of decisions, actions, and feedback. These logs are stored in each project's metadata, ensuring full transparency and easy tracking of the agent’s thought process and decisions.
 
 
 ## Key Benefits
@@ -43,19 +42,15 @@ Designed for both technical and non-technical users, WikiAgents makes it easy to
 ## Potential Applications
 
 - **LLM Agents Education**   
-WikiAgents simplifies user education on Large Language Model (LLM) agents with intuitive customization options, enabling experimentation and learning. Transparency features like Tapes log detailed records of agent decisions and interactions, offering valuable insights into their thought processes.
+  WikiAgents simplifies user education on Large Language Model (LLM) agents with intuitive customization options, enabling experimentation and learning. Transparency features like Tapes log detailed records of agent decisions and interactions, offering valuable insights into their thought processes.
 
 - **Personal Research & Task Automation**   
   Use WikiAgents as a personal platform for automating research tasks, managing knowledge, and streamlining workflows tailored to individual needs.
 
 - **Academic Research Collaboration**  
-  Facilitate collaborative research by enabling the development, testing, and refinement of custom LLM agents for generating, refining, and verifying content.
+  Facilitate collaborative research by enabling the development, testing, and refinement of custom LLM agents for generating, refining, and verifying content or automating complex workflows.
 
-- **Marketing Content Creation**
-  Automate the generation and refinement of marketing materials, from ad copy and social media posts to in-depth campaign strategies, tailored to specific audience segments.
-
-- **Enterprise Knowledge Management**   
-  WikiAgents uses AI to automatically extract, update, and verify information from diverse sources, creating a dynamic, up-to-date knowledge base. This curated knowledge base can serve as the foundation for AI-driven projects, allowing teams to build and refine more accurate, data-driven solutions.
+- **Many more**
 
 
 ## Usage
@@ -122,7 +117,7 @@ To get started with WikiAgents, follow these steps:
 - **Redis Insight:** [http://localhost:5540](http://localhost:5540)  
 
 ## Guides
-Check out the [User Guide](docs/user_guide.md)
+Check out the [User Guide](docs/userguide.pdf)
 
 ## Architecture Overview
 

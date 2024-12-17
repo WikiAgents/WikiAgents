@@ -180,7 +180,7 @@ output_structure_suggestion_steps = get_step_schemas_from_union_type(
 
 agent_selection_plan_steps = get_step_schemas_from_union_type(
     Annotated[
-        Union[GetAvailableAgentsAction, AvailableAgentsObservation],
+        Union[AssistantThought, GetAvailableAgentsAction],
         Field(discriminator="kind"),
     ]
 )
@@ -188,9 +188,7 @@ agent_selection_plan_steps = get_step_schemas_from_union_type(
 
 agent_selection_steps = get_step_schemas_from_union_type(
     Annotated[
-        Union[
-            AgentSelectionThought, GetTools, AllToolsObservation, AgentInstancesThought
-        ],
+        Union[AgentSelectionThought, GetTools, AgentInstancesThought, AssistantThought],
         Field(discriminator="kind"),
     ]
 )
