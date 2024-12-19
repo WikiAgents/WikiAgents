@@ -79,13 +79,15 @@ OUTPUT_STRUCTURE_SUGGESTION = (
 Guidelines:
 1. Simple Structure: 
    - Use one Book for the entire project. Use the project name as book name.
-   - Represent key components as Chapters.
+   - Represent abstract key concepts as Chapters.
    - Divide subtopics or deliverables into Pages within each Chapter.
+   - Chapters should contain several pages. If is has too few pages, make the chapter more abstract.
    
 2. Detailed Structure: 
-   - Use multiple Books, each representing a key component.
-   - Organize related subtopics as Chapters within each Book.
+   - Use up to three Books, each representing an abstract high level concept.
+   - Organize related concepts and subtopics as Chapters within each Book.
    - Use Pages for specific deliverables, explanations, or fine-grained content within each Chapter.
+   - Chapters should contain several pages. If is has too few pages, make the chapter more abstract.
 
 ALWAYS use descriptive page names! DO NOT name them Page 1, Page 2, ...
 The output structure must cover ONLY key_components from the final_requirements_refinement! Use the key components as outer containers (e.g. as book or as chapter) and structure the details of the component into pages.

@@ -181,7 +181,9 @@ class WikiAgentsEnvironment(Environment):
                         if job.get_status().value == "failed":
                             output = job.exc_info
                         elif job.get_status().value == "finished":
-                            output = job.result if job.result else "Tool returned None"
+                            output = (
+                                str(job.result) if job.result else "Tool returned None"
+                            )
                         tape = tape.append(UserDefinedToolObservation(output=output))
 
             except FatalError:

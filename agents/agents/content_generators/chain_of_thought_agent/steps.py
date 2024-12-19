@@ -17,7 +17,7 @@ from agents.base.steps import (
 
 
 class PlanThought(WikiAgentsThought):
-    kind: Literal["plan"] = "plan"
+    kind: Literal["plan_thought"] = "plan_thought"
     plan: List[str] = Field(description="The list containing each planned step.")
 
 

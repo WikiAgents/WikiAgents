@@ -16,7 +16,7 @@ DON'T MAKE UP USERDEFINED ACTIONS! ONLY USED USERDEFINED ACTIONS THAT ARE LISTED
 
 """
 
-PLAN_GUIDANCE = f"""Write a natural language plan on how to use tools to help the user. Respond with kind='plan'.
+PLAN_GUIDANCE = f"""Write a natural language plan on how to use tools to help the user. Respond with kind='plan_thought'.
 {short_format_instruction}
 """
 
