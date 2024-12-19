@@ -101,11 +101,19 @@ Here is an example of the expected structure schema for the simple_structure and
    {
       "1. chapter1_name": {
          "1. page1_name": "short description of what the page contains",
-         "2. page2_name": "short description of what the page contains"
+         "2. page2_name": "short description of what the page contains",
+         "3. page3_name": "short description of what the page contains",
+         "4. page4_name": "short description of what the page contains",
+         "5. page5_name": "short description of what the page contains",
       },
       "2. chapter2_name": {
-         "1. page1_name": "short description of what the page contains"
-      },      
+         "1. page1_name": "short description of what the page contains",
+         "2. page2_name": "short description of what the page contains",
+         "3. page3_name": "short description of what the page contains",
+         "4. page4_name": "short description of what the page contains",
+         "5. page5_name": "short description of what the page contains",
+      },
+      ...      
    }
 }
 
